@@ -2,8 +2,7 @@ FROM node:20.11.0
 WORKDIR /node/lib
 COPY . .
 
-RUN npm install --global --no-progress yarn && \
-    yarn install --immutable --immutable-cache --check-cache && \
+RUN yarn install --immutable --immutable-cache --check-cache && \
     yarn cache clean
 
 EXPOSE 80
