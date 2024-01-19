@@ -1,5 +1,5 @@
 FROM node:20.11.0
-WORKDIR /node
+WORKDIR /app
 COPY package.json .
 COPY yarn.lock .
 
