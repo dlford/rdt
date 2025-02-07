@@ -6,6 +6,10 @@ services:
       - "27017:27017"
     volumes:
       - db_data:/data/db
+    develop:
+      watch:
+        - action: rebuild
+          path: ./mongo/Dockerfile
   node:
     build: ./node
     ports:
@@ -19,5 +23,7 @@ services:
           target: /app/lib
         - action: rebuild
           path: ./node/package.json
+        - action: rebuild
+          path: ./node/Dockerfile
 volumes:
   db_data:
