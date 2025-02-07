@@ -8,7 +8,8 @@
     "test": "mocha lib/test/index.test.js"
   },
   "dependencies": {
-    "express": "4.18.2"
+    "express": "4.18.2",
+    "mongodb": "^6.13.0"
   },
   "devDependencies": {
     "@simpleview/mochalib": "^2.0.2",
