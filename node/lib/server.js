@@ -126,15 +126,25 @@ async function main() {
     const id = req.query.id;
 
     if (title) {
-      queries.push({ title: title });
+      queries.push({
+        title: Array.isArray(title) ? { $in: title } : title,
+      });
     }
 
     if (releaseDate) {
-      queries.push({ release_date: releaseDate });
+      queries.push({
+        release_date: Array.isArray(releaseDate)
+          ? { $in: releaseDate }
+          : releaseDate,
+      });
     }
 
     if (id) {
-      queries.push({ _id: new ObjectId(id) });
+      queries.push({
+        _id: Array.isArray(id)
+          ? { $in: id.map((i) => new ObjectId(i)) }
+          : new ObjectId(id),
+      });
     }
 
     const filter = queries.length ? { $and: queries } : undefined;
@@ -145,7 +155,19 @@ async function main() {
   });
 
   app.get('/remove', async (req, res) => {
-    res.send('Not Implemented', 501);
+    let filter;
+    const id = req.query.id;
+    if (id) {
+      filter = {
+        _id: Array.isArray(id)
+          ? { $in: id.map((i) => new ObjectId(i)) }
+          : new ObjectId(id),
+      };
+    }
+
+    const result = await db.collection('movies').deleteMany(filter);
+
+    res.json(result);
   });
 
   app.listen(port, () => {
