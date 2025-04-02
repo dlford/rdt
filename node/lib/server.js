@@ -38,14 +38,11 @@ async function main() {
     const moviesArg = req.query.movies;
 
     if (!moviesArg) {
-      res.send(
-        {
-          success: false,
-          message:
-            'Must include the query param `movies` as an array of movie objects',
-        },
-        400,
-      );
+      res.status(400).send({
+        success: false,
+        message:
+          'Must include the query param `movies` as an array of movie objects',
+      });
       return;
     }
 
@@ -54,26 +51,20 @@ async function main() {
       movies = JSON.parse(moviesArg);
     } catch (e) {
       console.error(e);
-      res.send(
-        {
-          success: false,
-          message:
-            'Must include the query param `movies` as an array of movie objects, failed to JSON parse movies',
-        },
-        400,
-      );
+      res.status(400).send({
+        success: false,
+        message:
+          'Must include the query param `movies` as an array of movie objects, failed to JSON parse movies',
+      });
       return;
     }
 
     if (!Array.isArray(movies)) {
-      res.send(
-        {
-          success: false,
-          message:
-            'Must include the query param `movies` as an array of movie objects, movies is not an array',
-        },
-        400,
-      );
+      res.status(400).send({
+        success: false,
+        message:
+          'Must include the query param `movies` as an array of movie objects, movies is not an array',
+      });
       return;
     }
 
@@ -82,27 +73,21 @@ async function main() {
         ({ title, release_date }) => !!title && !!release_date,
       )
     ) {
-      res.send(
-        {
-          success: false,
-          message: 'All movies must have a `title` and `release_date`',
-        },
-        400,
-      );
+      res.status(400).send({
+        success: false,
+        message: 'All movies must have a `title` and `release_date`',
+      });
       return;
     }
 
     if (
       !movies.every(({ release_date }) => dateRegex.test(release_date))
     ) {
-      res.send(
-        {
-          success: false,
-          message:
-            '`release_date` must match ISO 8601 date string format',
-        },
-        400,
-      );
+      res.status(400).send({
+        success: false,
+        message:
+          '`release_date` must match ISO 8601 date string format',
+      });
       return;
     }
 
