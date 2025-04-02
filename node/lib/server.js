@@ -1,5 +1,6 @@
 const MongoClient = require('mongodb').MongoClient;
 const express = require('express');
+const { ObjectId } = require('mongodb');
 
 const app = express();
 
@@ -21,6 +22,10 @@ async function main() {
     if (err) throw err;
   });
 
+  process.on('exit', async () => {
+    await dbClient.close();
+  });
+
   const db = dbClient.db(dbName);
 
   await runMigrations(db);
@@ -28,12 +33,6 @@ async function main() {
   app.get('/', (req, res) => {
     res.send('Hello World!');
   });
-
-  // app.get('/movies', async (req, res) => {
-  //   const result = await db.collection('movies').find().toArray();
-
-  //   res.send(result);
-  // });
 
   app.get('/insert', async (req, res) => {
     const moviesArg = req.query.movies;
@@ -120,13 +119,33 @@ async function main() {
   });
 
   app.get('/find', async (req, res) => {
-    res.status(501);
-    res.send('Not Implemented');
+    const queries = [];
+
+    const title = req.query.title;
+    const releaseDate = req.query.release_date;
+    const id = req.query.id;
+
+    if (title) {
+      queries.push({ title: title });
+    }
+
+    if (releaseDate) {
+      queries.push({ release_date: releaseDate });
+    }
+
+    if (id) {
+      queries.push({ _id: new ObjectId(id) });
+    }
+
+    const filter = queries.length ? { $and: queries } : undefined;
+
+    const result = await db.collection('movies').find(filter).toArray();
+
+    res.json(result);
   });
 
   app.get('/remove', async (req, res) => {
-    res.status(501);
-    res.send('Not Implemented');
+    res.send('Not Implemented', 501);
   });
 
   app.listen(port, () => {
