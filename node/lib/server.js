@@ -10,6 +10,16 @@ const dbName = process.env.RDT_NODE_DB_NAME || 'rdt';
 
 const dbClient = new MongoClient(dbUrl);
 
+function errorHandler(err, req, res, next) {
+  console.error(err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res
+    .status(500)
+    .json({ success: false, message: 'An unknown error occured' });
+}
+
 async function runMigrations(db) {
   await db.createCollection('movies');
 }
@@ -54,7 +64,7 @@ async function main() {
       res.status(400).send({
         success: false,
         message:
-          'Must include the query param `movies` as an array of movie objects, failed to JSON parse movies',
+          'Must include the query param `movies` as an array of movie objects, invalid movies array',
       });
       return;
     }
@@ -103,7 +113,7 @@ async function main() {
     });
   });
 
-  app.get('/find', async (req, res) => {
+  app.get('/find', async (req, res, next) => {
     const queries = [];
 
     const title = req.query.title;
@@ -125,11 +135,16 @@ async function main() {
     }
 
     if (id) {
-      queries.push({
-        _id: Array.isArray(id)
-          ? { $in: id.map((i) => new ObjectId(i)) }
-          : new ObjectId(id),
-      });
+      try {
+        queries.push({
+          _id: Array.isArray(id)
+            ? { $in: id.map((i) => new ObjectId(i)) }
+            : new ObjectId(id),
+        });
+      } catch (e) {
+        next(e);
+        return;
+      }
     }
 
     const filter = queries.length ? { $and: queries } : undefined;
@@ -143,17 +158,24 @@ async function main() {
     let filter;
     const id = req.query.id;
     if (id) {
-      filter = {
-        _id: Array.isArray(id)
-          ? { $in: id.map((i) => new ObjectId(i)) }
-          : new ObjectId(id),
-      };
+      try {
+        filter = {
+          _id: Array.isArray(id)
+            ? { $in: id.map((i) => new ObjectId(i)) }
+            : new ObjectId(id),
+        };
+      } catch (e) {
+        next(e);
+        return;
+      }
     }
 
     const result = await db.collection('movies').deleteMany(filter);
 
     res.json(result);
   });
+
+  app.use(errorHandler);
 
   app.listen(port, () => {
     console.log(`Example app listening on port ${port}!`);
