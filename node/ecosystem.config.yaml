@@ -1,0 +1,3 @@
+script: lib/server.js
+watch:
+  - lib

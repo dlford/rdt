@@ -3,10 +3,11 @@ WORKDIR /app
 COPY package.json .
 COPY yarn.lock .
 
+RUN npm install pm2 -g
 RUN yarn install --immutable --immutable-cache --check-cache && \
     yarn cache clean
 
-COPY lib ./lib
+COPY ecosystem.config.yaml ./
 
 EXPOSE 80
-CMD ["yarn", "start"]
+CMD ["pm2-runtime", "ecosystem.config.yaml"]
