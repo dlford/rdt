@@ -10,21 +10,21 @@ services:
       watch:
         - action: rebuild
           path: ./mongo/Dockerfile
-  node:
-    build: ./node
-    ports:
-      - "80:80"
-    depends_on:
-      - mongo
-    develop:
-      watch:
-        - action: sync+restart
-          path: ./node/lib
-          target: /app/lib
-        - action: rebuild
-          path: ./node/package.json
-        - action: rebuild
-          path: ./node/Dockerfile
+  # node:
+  #   build: ./node
+  #   ports:
+  #     - "80:80"
+  #   depends_on:
+  #     - mongo
+  #   develop:
+  #     watch:
+  #       - action: sync+restart
+  #         path: ./node/lib
+  #         target: /app/lib
+  #       - action: rebuild
+  #         path: ./node/package.json
+  #       - action: rebuild
+  #         path: ./node/Dockerfile
   graphql:
     build: ./graphql
     ports:
