@@ -25,5 +25,20 @@ services:
           path: ./node/package.json
         - action: rebuild
           path: ./node/Dockerfile
+  graphql:
+    build: ./graphql
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./graphql/lib
+          target: /app/lib
+        - action: rebuild
+          path: ./graphql/package.json
+        - action: rebuild
+          path: ./graphql/Dockerfile
 volumes:
   db_data:
