@@ -19,48 +19,85 @@ async function runMigrations(db) {
 }
 
 const typeDefs = `#graphql
-  type Status {
-    start: Float
+  type Training_Movies_Movie {
+    _id: ID!
+    title: String!
+    release_date: String!
   }
 
-  type Training_Movies_Movie {
-    id: String
+  input Training_Movies_Insert_Input {
+    title: String!
+    release_date: String!
+  }
+
+  type Training_Movies_Insert_Response {
+    success: Boolean!
+    message: String!
+  }
+
+  input Training_Movies_Find_Input {
+    id: ID
     title: String
     release_date: String
   }
 
-  type Book {
-    title: String
-    author: String
+  type Training_Movies_Find_Response {
+    success: Boolean!
+    message: String
+    docs: [Training_Movies_Movie!]!
+  }
+
+  type Training_Movies_Remove_Response {
+    success: Boolean!
+    message: String!
+  }
+
+  type Training_Movies_Query {
+    find(query: Training_Movies_Find_Input): Training_Movies_Find_Response!
+  }
+
+  type Training_Movies_Mutation {
+    insert(movies: [Training_Movies_Insert_Input!]!): Training_Movies_Insert_Response!
+    remove(ids: [ID]): Training_Movies_Remove_Response!
   }
 
   type Query {
-    status: Status
-    books: [Book]
+    training: Training_Movies_Query
+  }
+
+  type Mutation {
+    training: Training_Movies_Mutation
   }
 `;
 
-const books = [
-  {
-    title: 'The Awakening',
-    author: 'Kate Chopin',
-  },
-  {
-    title: 'City of Glass',
-    author: 'Paul Auster',
-  },
-];
-
 const resolvers = {
   Query: {
-    status: () => ({
-      start: startTime,
-    }),
-    books: async (parent, args, ctx) => {
-      // TODO: Delete test
-      const movies = await ctx.db.collection('movies').find().toArray();
-      console.log(movies);
-      return books;
+    training: () => ({}),
+  },
+  Mutation: {
+    training: () => ({}),
+  },
+  Training_Movies_Query: {
+    find: async (parent, args, ctx) => {
+      const docs = await ctx.db.collection('movies').find().toArray();
+      return {
+        success: true,
+        docs,
+      };
+    },
+  },
+  Training_Movies_Mutation: {
+    insert: async (parent, args, ctx) => {
+      return {
+        success: false,
+        message: 'not implemented',
+      };
+    },
+    remove: async (parent, args, ctx) => {
+      return {
+        success: false,
+        message: 'not implemented',
+      };
     },
   },
 };
