@@ -14,9 +14,22 @@ const dbName = process.env.RDT_GRAPHQL_DB_NAME || 'rdt';
 
 const dbClient = new MongoClient(dbUrl);
 
+function errorHandler(err, req, res, next) {
+  console.error(err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res
+    .status(500)
+    .json({ success: false, message: 'An unknown error occured' });
+}
+
 async function runMigrations(db) {
   await db.createCollection('movies');
 }
+
+// ISO 8601 date string
+const dateRegex = /^\d{4}-([0][1-9]|1[0-2])-([0][1-9]|[1-2]\d|3[01])$/;
 
 const typeDefs = `#graphql
   type Training_Movies_Movie {
@@ -35,12 +48,6 @@ const typeDefs = `#graphql
     message: String!
   }
 
-  input Training_Movies_Find_Input {
-    id: ID
-    title: String
-    release_date: String
-  }
-
   type Training_Movies_Find_Response {
     success: Boolean!
     message: String
@@ -53,7 +60,7 @@ const typeDefs = `#graphql
   }
 
   type Training_Movies_Query {
-    find(query: Training_Movies_Find_Input): Training_Movies_Find_Response!
+    find(id: ID, title: String, release_date: String): Training_Movies_Find_Response!
   }
 
   type Training_Movies_Mutation {
@@ -79,7 +86,51 @@ const resolvers = {
   },
   Training_Movies_Query: {
     find: async (parent, args, ctx) => {
-      const docs = await ctx.db.collection('movies').find().toArray();
+      const queries = [];
+
+      const { title, release_date, id } = args;
+
+      if (id) {
+        try {
+          queries.push({
+            _id: new ObjectId(id),
+          });
+        } catch (e) {
+          console.error(e);
+          return {
+            success: false,
+            message: 'invalid `id` in query',
+            docs: [],
+          };
+        }
+      }
+
+      if (title) {
+        queries.push({
+          title,
+        });
+      }
+
+      if (release_date) {
+        if (!dateRegex.test(release_date)) {
+          return {
+            success: false,
+            message: 'invalid `release_date` in query',
+            docs: [],
+          };
+        }
+
+        queries.push({
+          release_date,
+        });
+      }
+
+      const filter = queries.length ? { $or: queries } : undefined;
+
+      const docs = await ctx.db
+        .collection('movies')
+        .find(filter)
+        .toArray();
       return {
         success: true,
         docs,
@@ -88,16 +139,125 @@ const resolvers = {
   },
   Training_Movies_Mutation: {
     insert: async (parent, args, ctx) => {
+      const { movies } = args;
+
+      if (!movies.length) {
+        return {
+          success: false,
+          message: 'No movies provided',
+        };
+      }
+
+      let errors = [];
+      movies.forEach((movie) => {
+        if (!movie.title) {
+          errors.push(
+            `"Movie missing required field \`title\`: \`${JSON.stringify(
+              movie,
+            )}\`"`,
+          );
+        }
+
+        if (!movie.release_date) {
+          errors.push(
+            `"Movie missing required field \`release_date\`: \`${JSON.stringify(
+              movie,
+            )}\`"`,
+          );
+        }
+
+        if (
+          !!movie.release_date &&
+          !dateRegex.test(movie.release_date)
+        ) {
+          errors.push(
+            `"Movie has invalid \`release_date\`, must match ISO 8601 date string format: \`${JSON.stringify(
+              movie,
+            )}\`"`,
+          );
+        }
+      });
+
+      if (errors.length) {
+        return {
+          success: false,
+          message: `Added 0 movies due to one or more errors: ${errors.join(
+            ', ',
+          )}`,
+        };
+      }
+
+      try {
+        await ctx.db.collection('movies').insertMany(movies);
+      } catch (e) {
+        console.error(e);
+        return {
+          success: false,
+          message: 'An unknown error has occured',
+        };
+      }
+
       return {
-        success: false,
-        message: 'not implemented',
+        success: true,
+        message: `Added movies: ${movies
+          .reduce((acc, cur) => {
+            return [...acc, cur.title];
+          }, [])
+          .join(', ')}`,
       };
     },
     remove: async (parent, args, ctx) => {
-      return {
-        success: false,
-        message: 'not implemented',
-      };
+      const { ids } = args;
+
+      let filter;
+      let objIds = [];
+      let errors = [];
+      if (ids && ids.length) {
+        ids.forEach((id) => {
+          try {
+            objIds.push(new ObjectId(id));
+          } catch (e) {
+            console.error(e);
+            errors.push(id);
+            return {
+              success: false,
+              message: `Invalid ID: ${id}`,
+            };
+          }
+        });
+
+        if (errors.length) {
+          return {
+            success: false,
+            message: `One or more invalid IDs: ${errors.join(', ')}`,
+          };
+        }
+
+        filter = {
+          _id: { $in: objIds },
+        };
+      }
+
+      try {
+        const result = await ctx.db
+          .collection('movies')
+          .deleteMany(filter);
+
+        const { deletedCount } = result;
+
+        return {
+          success: deletedCount !== 0,
+          message: `Deleted ${deletedCount} ${
+            deletedCount === 1 ? 'movie' : 'movies'
+          }`,
+        };
+      } catch (e) {
+        console.error(e);
+        return {
+          success: false,
+          message: 'An unknown error has occured',
+        };
+      }
     },
   },
 };
@@ -136,6 +296,8 @@ app.use(
     },
   }),
 );
+
+app.use(errorHandler);
 
 app.listen(port, () => {
   console.log(`GraphQL listening on port ${port}!`);
