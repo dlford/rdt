@@ -127,14 +127,22 @@ const resolvers = {
 
       const filter = queries.length ? { $or: queries } : undefined;
 
-      const docs = await ctx.db
-        .collection('movies')
-        .find(filter)
-        .toArray();
-      return {
-        success: true,
-        docs,
-      };
+      try {
+        const docs = await ctx.db
+          .collection('movies')
+          .find(filter)
+          .toArray();
+        return {
+          success: true,
+          docs,
+        };
+      } catch (e) {
+        console.error(e);
+        return {
+          success: false,
+          message: 'An unknown error has occured',
+        };
+      }
     },
   },
   Training_Movies_Mutation: {
@@ -189,6 +197,15 @@ const resolvers = {
 
       try {
         await ctx.db.collection('movies').insertMany(movies);
+
+        return {
+          success: true,
+          message: `Added movies: ${movies
+            .reduce((acc, cur) => {
+              return [...acc, cur.title];
+            }, [])
+            .join(', ')}`,
+        };
       } catch (e) {
         console.error(e);
         return {
@@ -196,15 +213,6 @@ const resolvers = {
           message: 'An unknown error has occured',
         };
       }
-
-      return {
-        success: true,
-        message: `Added movies: ${movies
-          .reduce((acc, cur) => {
-            return [...acc, cur.title];
-          }, [])
-          .join(', ')}`,
-      };
     },
     remove: async (parent, args, ctx) => {
       const { ids } = args;
