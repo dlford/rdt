@@ -1,5 +1,6 @@
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
+import { GraphQLScalarType, Kind } from 'graphql';
 import { MongoClient, ObjectId } from 'mongodb';
 import cors from 'cors';
 import express from 'express';
@@ -32,15 +33,18 @@ async function runMigrations(db) {
 const dateRegex = /^\d{4}-([0][1-9]|1[0-2])-([0][1-9]|[1-2]\d|3[01])$/;
 
 const typeDefs = `#graphql
+  scalar ObjectID
+  scalar ISODateString
+
   type Training_Movies_Movie {
-    _id: ID!
+    _id: ObjectID!
     title: String!
-    release_date: String!
+    release_date: ISODateString!
   }
 
   input Training_Movies_Insert_Input {
     title: String!
-    release_date: String!
+    release_date: ISODateString!
   }
 
   type Training_Movies_Insert_Response {
@@ -60,12 +64,12 @@ const typeDefs = `#graphql
   }
 
   type Training_Movies_Query {
-    find(id: ID, title: String, release_date: String): Training_Movies_Find_Response!
+    find(id: ObjectID, title: String, release_date: ISODateString): Training_Movies_Find_Response!
   }
 
   type Training_Movies_Mutation {
     insert(movies: [Training_Movies_Insert_Input!]!): Training_Movies_Insert_Response!
-    remove(ids: [ID]): Training_Movies_Remove_Response!
+    remove(ids: [ObjectID]): Training_Movies_Remove_Response!
   }
 
   type Query {
@@ -84,6 +88,54 @@ const resolvers = {
   Mutation: {
     training: () => ({}),
   },
+  ObjectID: new GraphQLScalarType({
+    name: 'ObjectID',
+    description: 'MongoDB BSON ObjectId',
+    serialize(value) {
+      if (typeof value === 'string' && ObjectId.isValid(value)) {
+        return value;
+      }
+      if (typeof value === 'object' && value instanceof ObjectId) {
+        return value.toString();
+      }
+      throw new Error('Not a valid ID');
+    },
+    parseValue(value) {
+      if (typeof value === 'string' && ObjectId.isValid(value)) {
+        return new ObjectId(value);
+      }
+      throw new Error('Not a valid ID');
+    },
+    parseLiteral(ast) {
+      if (ast.kind === Kind.STRING && ObjectId.isValid(ast.value)) {
+        return new ObjectId(ast.value);
+      }
+      throw new Error('Not a valid ID');
+    },
+  }),
+  ISODateString: new GraphQLScalarType({
+    name: 'ISODateString',
+    description:
+      'ISO 8601 date string (without time, e.g. `2025-01-01`)',
+    serialize(value) {
+      if (typeof value === 'string' && dateRegex.test(value)) {
+        return value;
+      }
+      throw new Error('Not a valid ISO 8601 date string');
+    },
+    parseValue(value) {
+      if (typeof value === 'string' && dateRegex.test(value)) {
+        return value;
+      }
+      throw new Error('Not a valid ISO 8601 date string');
+    },
+    parseLiteral(ast) {
+      if (ast.kind === Kind.STRING && dateRegex.test(ast.value)) {
+        return ast.value;
+      }
+      throw new Error('Not a valid ISO 8601 date string');
+    },
+  }),
   Training_Movies_Query: {
     find: async (parent, args, ctx) => {
       const queries = [];
@@ -91,18 +143,9 @@ const resolvers = {
       const { title, release_date, id } = args;
 
       if (id) {
-        try {
-          queries.push({
-            _id: new ObjectId(id),
-          });
-        } catch (e) {
-          console.error(e);
-          return {
-            success: false,
-            message: 'invalid `id` in query',
-            docs: [],
-          };
-        }
+        queries.push({
+          _id: id,
+        });
       }
 
       if (title) {
@@ -112,14 +155,6 @@ const resolvers = {
       }
 
       if (release_date) {
-        if (!dateRegex.test(release_date)) {
-          return {
-            success: false,
-            message: 'invalid `release_date` in query',
-            docs: [],
-          };
-        }
-
         queries.push({
           release_date,
         });
@@ -173,17 +208,6 @@ const resolvers = {
             )}\`"`,
           );
         }
-
-        if (
-          !!movie.release_date &&
-          !dateRegex.test(movie.release_date)
-        ) {
-          errors.push(
-            `"Movie has invalid \`release_date\`, must match ISO 8601 date string format: \`${JSON.stringify(
-              movie,
-            )}\`"`,
-          );
-        }
       });
 
       if (errors.length) {
@@ -218,31 +242,9 @@ const resolvers = {
       const { ids } = args;
 
       let filter;
-      let objIds = [];
-      let errors = [];
       if (ids && ids.length) {
-        ids.forEach((id) => {
-          try {
-            objIds.push(new ObjectId(id));
-          } catch (e) {
-            console.error(e);
-            errors.push(id);
-            return {
-              success: false,
-              message: `Invalid ID: ${id}`,
-            };
-          }
-        });
-
-        if (errors.length) {
-          return {
-            success: false,
-            message: `One or more invalid IDs: ${errors.join(', ')}`,
-          };
-        }
-
         filter = {
-          _id: { $in: objIds },
+          _id: { $in: ids },
         };
       }
 
