@@ -17,9 +17,14 @@ const dbClient = new MongoClient(dbUrl);
 
 function errorHandler(err, req, res, next) {
   console.error(err);
-  if (res.headersSent) {
-    return next(err);
+  if (process.env.NODE_ENV !== 'production') {
+    res.status(500).json({ success: false, message: err.toString() });
   }
+
+  if (res.headersSent) {
+    return next(new Error('An unknown error occured'));
+  }
+
   res
     .status(500)
     .json({ success: false, message: 'An unknown error occured' });
@@ -154,22 +159,14 @@ const resolvers = {
 
       const filter = queries.length ? { $or: queries } : undefined;
 
-      try {
-        const docs = await ctx.db
-          .collection('movies')
-          .find(filter)
-          .toArray();
-        return {
-          success: true,
-          docs,
-        };
-      } catch (e) {
-        console.error(e);
-        return {
-          success: false,
-          message: 'An unknown error has occured',
-        };
-      }
+      const docs = await ctx.db
+        .collection('movies') // TODO: move to ctx
+        .find(filter)
+        .toArray();
+      return {
+        success: true,
+        docs,
+      };
     },
   },
   Training_Movies_Mutation: {
@@ -177,10 +174,7 @@ const resolvers = {
       const { movies } = args;
 
       if (!movies.length) {
-        return {
-          success: false,
-          message: 'No movies provided',
-        };
+        throw new Error('No movies provided');
       }
 
       let errors = [];
@@ -203,32 +197,23 @@ const resolvers = {
       });
 
       if (errors.length) {
-        return {
-          success: false,
-          message: `Added 0 movies due to one or more errors: ${errors.join(
+        throw new Error(
+          `Added 0 movies due to one or more errors: ${errors.join(
             ', ',
           )}`,
-        };
+        );
       }
 
-      try {
-        await ctx.db.collection('movies').insertMany(movies);
+      await ctx.db.collection('movies').insertMany(movies);
 
-        return {
-          success: true,
-          message: `Added movies: ${movies
-            .reduce((acc, cur) => {
-              return [...acc, cur.title];
-            }, [])
-            .join(', ')}`,
-        };
-      } catch (e) {
-        console.error(e);
-        return {
-          success: false,
-          message: 'An unknown error has occured',
-        };
-      }
+      return {
+        success: true,
+        message: `Added movies: ${movies
+          .reduce((acc, cur) => {
+            return [...acc, cur.title];
+          }, [])
+          .join(', ')}`,
+      };
     },
     remove: async (parent, args, ctx) => {
       const { ids } = args;
@@ -240,26 +225,18 @@ const resolvers = {
         };
       }
 
-      try {
-        const result = await ctx.db
-          .collection('movies')
-          .deleteMany(filter);
+      const result = await ctx.db
+        .collection('movies')
+        .deleteMany(filter);
 
-        const { deletedCount } = result;
+      const { deletedCount } = result;
 
-        return {
-          success: deletedCount !== 0,
-          message: `Deleted ${deletedCount} ${
-            deletedCount === 1 ? 'movie' : 'movies'
-          }`,
-        };
-      } catch (e) {
-        console.error(e);
-        return {
-          success: false,
-          message: 'An unknown error has occured',
-        };
-      }
+      return {
+        success: true,
+        message: `Deleted ${deletedCount} ${
+          deletedCount === 1 ? 'movie' : 'movies'
+        }`,
+      };
     },
   },
 };
