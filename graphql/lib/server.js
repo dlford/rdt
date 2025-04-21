@@ -159,10 +159,7 @@ const resolvers = {
 
       const filter = queries.length ? { $or: queries } : undefined;
 
-      const docs = await ctx.db
-        .collection('movies') // TODO: move to ctx
-        .find(filter)
-        .toArray();
+      const docs = await ctx.dbMovies.find(filter).toArray();
       return {
         success: true,
         docs,
@@ -204,7 +201,7 @@ const resolvers = {
         );
       }
 
-      await ctx.db.collection('movies').insertMany(movies);
+      await ctx.dbMovies.insertMany(movies);
 
       return {
         success: true,
@@ -225,9 +222,7 @@ const resolvers = {
         };
       }
 
-      const result = await ctx.db
-        .collection('movies')
-        .deleteMany(filter);
+      const result = await ctx.dbMovies.deleteMany(filter);
 
       const { deletedCount } = result;
 
@@ -271,7 +266,7 @@ app.use(
 
       await runMigrations(db);
 
-      return { db };
+      return { dbMovies: db.collection('movies') };
     },
   }),
 );
