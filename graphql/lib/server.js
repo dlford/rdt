@@ -16,10 +16,17 @@ const dbName = process.env.RDT_GRAPHQL_DB_NAME || 'rdt';
 const dbClient = new MongoClient(dbUrl);
 
 function errorHandler(err, req, res, next) {
-  console.error(err);
   if (process.env.NODE_ENV !== 'production') {
-    res.status(500).json({ success: false, message: err.toString() });
+    if (res.headersSent) {
+      return next(err);
+    }
+
+    return res
+      .status(500)
+      .json({ success: false, message: err.toString() });
   }
+
+  console.error(err);
 
   if (res.headersSent) {
     return next(new Error('An unknown error occured'));
