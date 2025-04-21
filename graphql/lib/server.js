@@ -92,13 +92,8 @@ const resolvers = {
     name: 'ObjectID',
     description: 'MongoDB BSON ObjectId',
     serialize(value) {
-      if (typeof value === 'string' && ObjectId.isValid(value)) {
-        return value;
-      }
-      if (typeof value === 'object' && value instanceof ObjectId) {
-        return value.toString();
-      }
-      throw new Error('Not a valid ID');
+      console.log(value);
+      return value.toString();
     },
     parseValue(value) {
       if (typeof value === 'string' && ObjectId.isValid(value)) {
@@ -118,10 +113,7 @@ const resolvers = {
     description:
       'ISO 8601 date string (without time, e.g. `2025-01-01`)',
     serialize(value) {
-      if (typeof value === 'string' && dateRegex.test(value)) {
-        return value;
-      }
-      throw new Error('Not a valid ISO 8601 date string');
+      return value;
     },
     parseValue(value) {
       if (typeof value === 'string' && dateRegex.test(value)) {
