@@ -49,7 +49,7 @@ const typeDefs = `#graphql
   scalar ISODateString
 
   type Training_Movies_Movie {
-    _id: ObjectID!
+    id: ObjectID!
     title: String!
     release_date: ISODateString!
   }
@@ -140,6 +140,11 @@ const resolvers = {
       throw new Error('Not a valid ISO 8601 date string');
     },
   }),
+  Training_Movies_Movie: {
+    id: (parent) => {
+      return parent._id;
+    },
+  },
   Training_Movies_Query: {
     find: async (parent, args, ctx) => {
       const queries = [];
