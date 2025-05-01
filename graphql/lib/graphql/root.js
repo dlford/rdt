@@ -10,21 +10,37 @@ export const typeDefs = `#graphql
   scalar ObjectID
   scalar ISODateString
 
+  type Training_Query {
+    movies: Training_Movies_Query
+    people: Training_People_Query
+  }
+
+  type Training_Mutation {
+    movies: Training_Movies_Mutation
+    people: Training_People_Mutation
+  }
+
   type Query {
-    training: Training_Movies_Query
+    training: Training_Query
   }
 
   type Mutation {
-    training: Training_Movies_Mutation
+    training: Training_Mutation
   }
 `;
 
 export const resolvers = {
   Query: {
-    training: () => ({}),
+    training: () => ({
+      movies: () => ({}),
+      people: () => ({}),
+    }),
   },
   Mutation: {
-    training: () => ({}),
+    training: () => ({
+      movies: () => ({}),
+      people: () => ({}),
+    }),
   },
   ObjectID: scalarObjectId('ObjectID'),
   ISODateString: new GraphQLScalarType({

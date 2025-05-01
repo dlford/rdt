@@ -41,6 +41,7 @@ function errorHandler(err, req, res, next) {
 
 async function runMigrations(db) {
   await db.createCollection('movies');
+  await db.createCollection('people');
 }
 
 const schema = await schemaLoader({
@@ -76,7 +77,10 @@ app.use(
 
       await runMigrations(db);
 
-      return { dbMovies: db.collection('movies') };
+      return {
+        dbMovies: db.collection('movies'),
+        dbPeople: db.collection('people'),
+      };
     },
   }),
 );
