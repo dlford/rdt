@@ -30,18 +30,8 @@ export const typeDefs = `#graphql
 `;
 
 export const resolvers = {
-  Query: {
-    training: () => ({
-      movies: () => ({}),
-      people: () => ({}),
-    }),
-  },
-  Mutation: {
-    training: () => ({
-      movies: () => ({}),
-      people: () => ({}),
-    }),
-  },
+  Query: () => ({}),
+  Mutation: () => ({}),
   ObjectID: scalarObjectId('ObjectID'),
   ISODateString: new GraphQLScalarType({
     name: 'ISODateString',

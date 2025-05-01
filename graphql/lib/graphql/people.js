@@ -41,6 +41,16 @@ export const typeDefs = `#graphql
 `;
 
 export const resolvers = {
+  Query: {
+    training: () => ({
+      people: () => ({}),
+    }),
+  },
+  Mutation: {
+    training: () => ({
+      people: () => ({}),
+    }),
+  },
   Training_People_Person: {
     id: graphqlHelpers.mapKeyResolver('_id'),
   },
