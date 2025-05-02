@@ -62,7 +62,6 @@ export const resolvers = {
   Training_Movies_Movie: {
     id: graphqlHelpers.mapKeyResolver('_id'),
     director: async (parent, args, ctx) => {
-      console.log(parent);
       if (parent.director_id) {
         const directorQ = await ctx.dbPeople
           .find({ _id: parent.director_id })
@@ -76,7 +75,6 @@ export const resolvers = {
       return null;
     },
     actors: async (parent, args, ctx) => {
-      console.log(parent);
       if (parent.actor_ids?.length) {
         const actorQ = await ctx.dbPeople
           .find({
