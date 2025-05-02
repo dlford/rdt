@@ -7,11 +7,17 @@ export const typeDefs = `#graphql
     id: ObjectID!
     title: String!
     release_date: ISODateString!
+    director_id: ObjectID
+    director: Training_People_Person
+    actor_ids: [ObjectID]
+    actors: [Training_People_Person]
   }
 
   input Training_Movies_Insert_Input {
     title: String!
     release_date: ISODateString!
+    director_id: ObjectID
+    actor_ids: [ObjectID]
   }
 
   type Training_Movies_Insert_Response {
@@ -31,7 +37,13 @@ export const typeDefs = `#graphql
   }
 
   type Training_Movies_Query {
-    find(id: ObjectID, title: String, release_date: ISODateString): Training_Movies_Find_Response!
+    find(
+      id: ObjectID,
+      title: String,
+      release_date: ISODateString,
+      director_id: ObjectID,
+      actor_id: ObjectID
+    ): Training_Movies_Find_Response!
   }
 
   type Training_Movies_Mutation {
@@ -49,12 +61,44 @@ export const resolvers = {
   },
   Training_Movies_Movie: {
     id: graphqlHelpers.mapKeyResolver('_id'),
+    director: async (parent, args, ctx) => {
+      console.log(parent);
+      if (parent.director_id) {
+        const directorQ = await ctx.dbPeople
+          .find({ _id: parent.director_id })
+          .toArray();
+
+        if (directorQ.length) {
+          return directorQ[0];
+        }
+      }
+
+      return null;
+    },
+    actors: async (parent, args, ctx) => {
+      console.log(parent);
+      if (parent.actor_ids?.length) {
+        const actorQ = await ctx.dbPeople
+          .find({
+            _id: {
+              $in: parent.actor_ids,
+            },
+          })
+          .toArray();
+
+        if (actorQ.length) {
+          return actorQ;
+        }
+      }
+
+      return null;
+    },
   },
   Training_Movies_Query: {
     find: async (parent, args, ctx) => {
       const queries = [];
 
-      const { title, release_date, id } = args;
+      const { title, release_date, id, director_id, actor_id } = args;
 
       if (id) {
         queries.push({
@@ -71,6 +115,18 @@ export const resolvers = {
       if (release_date) {
         queries.push({
           release_date,
+        });
+      }
+
+      if (director_id) {
+        queries.push({
+          director_id,
+        });
+      }
+
+      if (actor_id) {
+        queries.push({
+          actor_ids: actor_id,
         });
       }
 

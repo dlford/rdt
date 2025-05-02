@@ -7,6 +7,8 @@ export const typeDefs = `#graphql
     id: ObjectID!
     first_name: String!
     last_name: String!
+    directed: [Training_Movies_Movie]
+    acted_in: [Training_Movies_Movie]
   }
 
   input Training_People_Insert_Input {
@@ -49,6 +51,32 @@ export const resolvers = {
   },
   Training_People_Person: {
     id: graphqlHelpers.mapKeyResolver('_id'),
+    directed: async (parent, args, ctx) => {
+      const directedQ = await ctx.dbMovies
+        .find({
+          director_id: parent._id,
+        })
+        .toArray();
+
+      if (directedQ.length) {
+        return directedQ;
+      }
+
+      return null;
+    },
+    acted_in: async (parent, args, ctx) => {
+      const actorQ = await ctx.dbMovies
+        .find({
+          actor_ids: parent._id,
+        })
+        .toArray();
+
+      if (actorQ.length) {
+        return actorQ;
+      }
+
+      return null;
+    },
   },
   Training_People_Query: {
     find: async (parent, args, ctx) => {
