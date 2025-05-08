@@ -22,9 +22,44 @@ async function main() {
   });
 
   app.get('/insert', async (req, res) => {
-    // const movies = req.query.movies;
+    const moviesArg = req.query.movies;
 
-    res.status(501).send('Not Implemented');
+    let movies;
+    try {
+      movies = JSON.parse(moviesArg);
+    } catch (e) {
+      console.error(e);
+      res.status(400).json({
+        success: false,
+        message: 'invalid argument for `movies`',
+      });
+      return;
+    }
+
+    const result = await axios.post(gqlUrl, {
+      query: `
+        mutation InsertMovies($movies: [Training_Movies_Insert_Input!]!) {
+          training {
+            movies {
+              insert(movies: $movies) {
+                message
+                success
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        movies,
+      },
+    });
+
+    if (result?.data?.errors?.length) {
+      res.status(500).json(result.data);
+      return;
+    }
+
+    res.json(result.data);
   });
 
   app.get('/find', async (req, res, next) => {
@@ -87,9 +122,32 @@ async function main() {
   });
 
   app.get('/remove', async (req, res) => {
-    // const id = req.query.id;
+    const ids = req.query.id;
 
-    res.status(501).send('Not Implemented');
+    const result = await axios.post(gqlUrl, {
+      query: `
+        mutation RemoveMovies($ids: [ObjectID]) {
+          training {
+            movies {
+              remove(ids: $ids) {
+                message
+                success
+              }
+            }
+          }
+        }
+      `,
+      variables: {
+        ids,
+      },
+    });
+
+    if (result?.data?.errors?.length) {
+      res.status(500).json(result.data);
+      return;
+    }
+
+    res.json(result.data);
   });
 
   app.use(errorHandler);
