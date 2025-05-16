@@ -33,7 +33,7 @@ export const typeDefs = `#graphql
   }
 
   type Training_People_Query {
-    find(id: ObjectID, title: String, release_date: ISODateString): Training_People_Find_Response!
+    find(id: ObjectID, first_name: String, last_name: String): Training_People_Find_Response!
   }
 
   type Training_People_Mutation {
