@@ -1,4 +1,5 @@
 const Movies = require('./collections/Movies');
+const People = require('./collections/People');
 
 class TrainingPrefix {
   constructor({ graphUrl, graphServer }) {
@@ -9,6 +10,12 @@ class TrainingPrefix {
 
     this._movies = new Movies({
       name: 'movies',
+      graphUrl,
+      graphServer,
+    });
+
+    this._people = new People({
+      name: 'people',
       graphUrl,
       graphServer,
     });
@@ -24,6 +31,18 @@ class TrainingPrefix {
 
   async remove_movies(...args) {
     return this._movies.remove(...args);
+  }
+
+  async find_people(...args) {
+    return this._people.find(...args);
+  }
+
+  async insert_people(...args) {
+    return this._people.insert(...args);
+  }
+
+  async remove_people(...args) {
+    return this._people.remove(...args);
   }
 }
 
