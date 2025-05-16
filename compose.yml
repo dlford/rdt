@@ -10,6 +10,9 @@ services:
       watch:
         - action: rebuild
           path: ./mongo/Dockerfile
+  client:
+    build: ./client
+    restart: no
   node:
     build: ./node
     ports:
@@ -25,6 +28,13 @@ services:
           path: ./node/package.json
         - action: rebuild
           path: ./node/Dockerfile
+        - action: sync+restart
+          path: ./client/src
+          target: /client/src
+        - action: rebuild
+          path: ./client/package.json
+        - action: rebuild
+          path: ./client/Dockerfile
   graphql:
     build: ./graphql
     ports:
