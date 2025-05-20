@@ -89,12 +89,13 @@ async function main() {
 
     try {
       const result = await graphServer.find_movies({ input, fields });
-      console.log(result);
       res.json(result);
     } catch (err) {
       res.status(500).json({
         success: false,
-        message: err?.message || 'An unknown error occured',
+        message:
+          err?.graphQLErrors?.[0]?.message ||
+          'An unknown error occured',
       });
       return;
     }
