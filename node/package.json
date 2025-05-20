@@ -10,7 +10,7 @@
   "dependencies": {
     "axios": "1.9.0",
     "express": "4.18.2",
-    "rd-training-client": "file:../client"
+    "@simpleview/rd-training-client": "file:../client"
   },
   "devDependencies": {
     "@simpleview/mochalib": "^2.0.2",

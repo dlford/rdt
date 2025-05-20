@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const graphServer = require('./graphServer');
 
 const app = express();
 
@@ -66,59 +67,37 @@ async function main() {
     const { title, release_date, id, actor_id, director_id } =
       req.query;
 
-    const result = await axios.post(gqlUrl, {
-      query: `
-        query FindMovies(
-          $id: ObjectID
-          $title: String
-          $release_date: ISODateString
-          $director_id: ObjectID
-          $actor_id: ObjectID
-        ) {
-          training {
-            movies {
-              find(
-                id: $id
-                title: $title
-                release_date: $release_date
-                director_id: $director_id
-                actor_id: $actor_id
-              ) {
-                docs {
-                  id
-                  release_date
-                  title
-                  director {
-                    id
-                    first_name
-                    last_name
-                  }
-                  actors {
-                    id
-                    first_name
-                    last_name
-                  }
-                }
-              }
-            }
+    const input = { title, release_date, id, actor_id, director_id };
+
+    const fields = `
+        docs {
+          id
+          release_date
+          title
+          director {
+            id
+            first_name
+            last_name
+          }
+          actors {
+            id
+            first_name
+            last_name
           }
         }
-      `,
-      variables: {
-        title,
-        release_date,
-        id,
-        actor_id,
-        director_id,
-      },
-    });
+      `;
 
-    if (result?.data?.errors?.length) {
-      res.status(500).json(result.data);
+    try {
+      const result = await graphServer.find_movies({ input, fields });
+      console.log(result);
+      res.json(result);
+    } catch (err) {
+      res.status(500).json({
+        success: false,
+        message: err?.message || 'An unknown error occured',
+      });
       return;
     }
-
-    res.json(result.data);
   });
 
   app.get('/remove', async (req, res) => {

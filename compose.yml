@@ -19,6 +19,8 @@ services:
       - "3000:3000"
     depends_on:
       - mongo
+    volumes:
+      - ./client:/app/node_modules/@simpleview/rd-training-client
     develop:
       watch:
         - action: sync+restart
@@ -28,9 +30,6 @@ services:
           path: ./node/package.json
         - action: rebuild
           path: ./node/Dockerfile
-        - action: sync+restart
-          path: ./client/src
-          target: /client/src
         - action: rebuild
           path: ./client/package.json
         - action: rebuild

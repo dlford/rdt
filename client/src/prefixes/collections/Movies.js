@@ -11,7 +11,7 @@ class Movies {
   }
 
   async find({ input, fields, context, headers }) {
-    context = context || this._graphServer.context;
+    context = context || this?._graphServer?.context;
 
     const variables = {
       ...input,
