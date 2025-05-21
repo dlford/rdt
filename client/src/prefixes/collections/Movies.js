@@ -54,7 +54,7 @@ class Movies {
   }
 
   async insert({ input, fields, context, headers }) {
-    context = context || this._graphServer.context;
+    context = context || this?._graphServer?.context;
 
     const variables = {
       ...input,
@@ -85,7 +85,7 @@ class Movies {
   }
 
   async remove({ input, fields, context, headers }) {
-    context = context || this._graphServer.context;
+    context = context || this?._graphServer?.context;
 
     const variables = {
       ...input,

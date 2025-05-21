@@ -31,6 +31,8 @@ services:
         - action: rebuild
           path: ./node/Dockerfile
         - action: rebuild
+          path: ./client/src
+        - action: rebuild
           path: ./client/package.json
         - action: rebuild
           path: ./client/Dockerfile

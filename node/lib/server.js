@@ -1,11 +1,9 @@
 const express = require('express');
-const axios = require('axios');
 const graphServer = require('./graphServer');
 
 const app = express();
 
 const port = +process.env.RDT_NODE_PORT || 3000;
-const gqlUrl = process.env.RDT_NODE_GQL_URL || 'http://graphql:4000';
 
 function errorHandler(err, req, res, next) {
   console.error(err);
@@ -37,37 +35,30 @@ async function main() {
       return;
     }
 
-    const result = await axios.post(gqlUrl, {
-      query: `
-        mutation InsertMovies($movies: [Training_Movies_Insert_Input!]!) {
-          training {
-            movies {
-              insert(movies: $movies) {
-                message
-                success
-              }
-            }
-          }
-        }
-      `,
-      variables: {
-        movies,
-      },
-    });
+    const input = { movies };
 
-    if (result?.data?.errors?.length) {
-      res.status(500).json(result.data);
+    const fields = `
+      message
+      success
+    `;
+
+    try {
+      const result = await graphServer.insert_movies({ input, fields });
+      res.json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        success: false,
+        message:
+          err?.graphQLErrors?.[0]?.message ||
+          'An unknown error occured',
+      });
       return;
     }
-
-    res.json(result.data);
   });
 
   app.get('/find', async (req, res, next) => {
-    const { title, release_date, id, actor_id, director_id } =
-      req.query;
-
-    const input = { title, release_date, id, actor_id, director_id };
+    const input = req.query;
 
     const fields = `
         docs {
@@ -91,6 +82,7 @@ async function main() {
       const result = await graphServer.find_movies({ input, fields });
       res.json(result);
     } catch (err) {
+      console.error(err);
       res.status(500).json({
         success: false,
         message:
@@ -102,32 +94,26 @@ async function main() {
   });
 
   app.get('/remove', async (req, res) => {
-    const ids = req.query.id;
+    const input = { ids: req.query.id };
 
-    const result = await axios.post(gqlUrl, {
-      query: `
-        mutation RemoveMovies($ids: [ObjectID]) {
-          training {
-            movies {
-              remove(ids: $ids) {
-                message
-                success
-              }
-            }
-          }
-        }
-      `,
-      variables: {
-        ids,
-      },
-    });
+    const fields = `
+      message
+      success
+    `;
 
-    if (result?.data?.errors?.length) {
-      res.status(500).json(result.data);
+    try {
+      const result = await graphServer.remove_movies({ input, fields });
+      res.json(result);
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({
+        success: false,
+        message:
+          err?.graphQLErrors?.[0]?.message ||
+          'An unknown error occured',
+      });
       return;
     }
-
-    res.json(result.data);
   });
 
   app.use(errorHandler);
