@@ -43,140 +43,140 @@ export const typeDefs = `#graphql
 `;
 
 export const resolvers = {
-  Training_Query: {
-    people: () => ({}),
-  },
-  Training_Mutation: {
-    people: () => ({}),
-  },
-  Training_People_Person: {
-    id: graphqlHelpers.mapKeyResolver('_id'),
-    directed: async (parent, args, ctx) => {
-      const directedQ = await ctx.dbMovies
-        .find({
-          director_id: parent._id,
-        })
-        .toArray();
+	Training_Query: {
+		people: () => ({}),
+	},
+	Training_Mutation: {
+		people: () => ({}),
+	},
+	Training_People_Person: {
+		id: graphqlHelpers.mapKeyResolver('_id'),
+		directed: async (parent, args, ctx) => {
+			const directedQ = await ctx.dbMovies
+				.find({
+					director_id: parent._id,
+				})
+				.toArray();
 
-      if (directedQ.length) {
-        return directedQ;
-      }
+			if (directedQ.length) {
+				return directedQ;
+			}
 
-      return null;
-    },
-    acted_in: async (parent, args, ctx) => {
-      const actorQ = await ctx.dbMovies
-        .find({
-          actor_ids: parent._id,
-        })
-        .toArray();
+			return null;
+		},
+		acted_in: async (parent, args, ctx) => {
+			const actorQ = await ctx.dbMovies
+				.find({
+					actor_ids: parent._id,
+				})
+				.toArray();
 
-      if (actorQ.length) {
-        return actorQ;
-      }
+			if (actorQ.length) {
+				return actorQ;
+			}
 
-      return null;
-    },
-  },
-  Training_People_Query: {
-    find: async (parent, args, ctx) => {
-      const queries = [];
+			return null;
+		},
+	},
+	Training_People_Query: {
+		find: async (parent, args, ctx) => {
+			const queries = [];
 
-      const { first_name, last_name, id } = args;
+			const { first_name, last_name, id } = args;
 
-      if (id) {
-        queries.push({
-          _id: id,
-        });
-      }
+			if (id) {
+				queries.push({
+					_id: id,
+				});
+			}
 
-      if (first_name) {
-        queries.push({
-          first_name,
-        });
-      }
+			if (first_name) {
+				queries.push({
+					first_name,
+				});
+			}
 
-      if (last_name) {
-        queries.push({
-          last_name,
-        });
-      }
+			if (last_name) {
+				queries.push({
+					last_name,
+				});
+			}
 
-      const filter = queries.length ? { $or: queries } : undefined;
+			const filter = queries.length ? { $or: queries } : undefined;
 
-      const docs = await ctx.dbPeople.find(filter).toArray();
-      return {
-        success: true,
-        docs,
-      };
-    },
-  },
-  Training_People_Mutation: {
-    insert: async (parent, args, ctx) => {
-      const { people } = args;
+			const docs = await ctx.dbPeople.find(filter).toArray();
+			return {
+				success: true,
+				docs,
+			};
+		},
+	},
+	Training_People_Mutation: {
+		insert: async (parent, args, ctx) => {
+			const { people } = args;
 
-      if (!people.length) {
-        throw new Error('No people provided');
-      }
+			if (!people.length) {
+				throw new Error('No people provided');
+			}
 
-      let errors = [];
-      people.forEach((person) => {
-        if (!person.first_name) {
-          errors.push(
-            `"Person missing required field \`first_name\`: \`${JSON.stringify(
-              person,
-            )}\`"`,
-          );
-        }
+			let errors = [];
+			people.forEach((person) => {
+				if (!person.first_name) {
+					errors.push(
+						`"Person missing required field \`first_name\`: \`${JSON.stringify(
+							person,
+						)}\`"`,
+					);
+				}
 
-        if (!person.last_name) {
-          errors.push(
-            `"Person missing required field \`last_name\`: \`${JSON.stringify(
-              person,
-            )}\`"`,
-          );
-        }
-      });
+				if (!person.last_name) {
+					errors.push(
+						`"Person missing required field \`last_name\`: \`${JSON.stringify(
+							person,
+						)}\`"`,
+					);
+				}
+			});
 
-      if (errors.length) {
-        throw new Error(
-          `Added 0 people due to one or more errors: ${errors.join(
-            ', ',
-          )}`,
-        );
-      }
+			if (errors.length) {
+				throw new Error(
+					`Added 0 people due to one or more errors: ${errors.join(
+						', ',
+					)}`,
+				);
+			}
 
-      await ctx.dbPeople.insertMany(people);
+			await ctx.dbPeople.insertMany(people);
 
-      return {
-        success: true,
-        message: `Added people: ${people
-          .reduce((acc, cur) => {
-            return [...acc, `${cur.first_name} ${cur.last_name}`];
-          }, [])
-          .join(', ')}`,
-      };
-    },
-    remove: async (parent, args, ctx) => {
-      const { ids } = args;
+			return {
+				success: true,
+				message: `Added people: ${people
+					.reduce((acc, cur) => {
+						return [...acc, `${cur.first_name} ${cur.last_name}`];
+					}, [])
+					.join(', ')}`,
+			};
+		},
+		remove: async (parent, args, ctx) => {
+			const { ids } = args;
 
-      let filter;
-      if (ids && ids.length) {
-        filter = {
-          _id: { $in: ids },
-        };
-      }
+			let filter;
+			if (ids && ids.length) {
+				filter = {
+					_id: { $in: ids },
+				};
+			}
 
-      const result = await ctx.dbPeople.deleteMany(filter);
+			const result = await ctx.dbPeople.deleteMany(filter);
 
-      const { deletedCount } = result;
+			const { deletedCount } = result;
 
-      return {
-        success: true,
-        message: `Deleted ${deletedCount} ${
-          deletedCount === 1 ? 'person' : 'people'
-        }`,
-      };
-    },
-  },
+			return {
+				success: true,
+				message: `Deleted ${deletedCount} ${
+					deletedCount === 1 ? 'person' : 'people'
+				}`,
+			};
+		},
+	},
 };

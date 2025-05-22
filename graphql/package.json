@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "start": "node lib/server.js",
-    "test": "mocha lib/test/index.test.js"
+    "test": "mocha lib/test/index.test.js",
+    "style": "eslint --fix ./lib --ext js"
   },
   "dependencies": {
     "@apollo/server": "^4.12.0",
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@simpleview/mochalib": "^2.0.2",
+    "eslint": "^9.27.0",
     "mocha": "^11.1.0"
   },
   "type": "module"

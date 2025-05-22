@@ -53,156 +53,156 @@ export const typeDefs = `#graphql
 `;
 
 export const resolvers = {
-  Training_Query: {
-    movies: () => ({}),
-  },
-  Training_Mutation: {
-    movies: () => ({}),
-  },
-  Training_Movies_Movie: {
-    id: graphqlHelpers.mapKeyResolver('_id'),
-    director: async (parent, args, ctx) => {
-      if (parent.director_id) {
-        const directorQ = await ctx.dbPeople
-          .find({ _id: parent.director_id })
-          .toArray();
+	Training_Query: {
+		movies: () => ({}),
+	},
+	Training_Mutation: {
+		movies: () => ({}),
+	},
+	Training_Movies_Movie: {
+		id: graphqlHelpers.mapKeyResolver('_id'),
+		director: async (parent, args, ctx) => {
+			if (parent.director_id) {
+				const directorQ = await ctx.dbPeople
+					.find({ _id: parent.director_id })
+					.toArray();
 
-        if (directorQ.length) {
-          return directorQ[0];
-        }
-      }
+				if (directorQ.length) {
+					return directorQ[0];
+				}
+			}
 
-      return null;
-    },
-    actors: async (parent, args, ctx) => {
-      if (parent.actor_ids?.length) {
-        const actorQ = await ctx.dbPeople
-          .find({
-            _id: {
-              $in: parent.actor_ids,
-            },
-          })
-          .toArray();
+			return null;
+		},
+		actors: async (parent, args, ctx) => {
+			if (parent.actor_ids?.length) {
+				const actorQ = await ctx.dbPeople
+					.find({
+						_id: {
+							$in: parent.actor_ids,
+						},
+					})
+					.toArray();
 
-        if (actorQ.length) {
-          return actorQ;
-        }
-      }
+				if (actorQ.length) {
+					return actorQ;
+				}
+			}
 
-      return null;
-    },
-  },
-  Training_Movies_Query: {
-    find: async (parent, args, ctx) => {
-      const queries = [];
+			return null;
+		},
+	},
+	Training_Movies_Query: {
+		find: async (parent, args, ctx) => {
+			const queries = [];
 
-      const { title, release_date, id, director_id, actor_id } = args;
+			const { title, release_date, id, director_id, actor_id } = args;
 
-      if (id) {
-        queries.push({
-          _id: id,
-        });
-      }
+			if (id) {
+				queries.push({
+					_id: id,
+				});
+			}
 
-      if (title) {
-        queries.push({
-          title,
-        });
-      }
+			if (title) {
+				queries.push({
+					title,
+				});
+			}
 
-      if (release_date) {
-        queries.push({
-          release_date,
-        });
-      }
+			if (release_date) {
+				queries.push({
+					release_date,
+				});
+			}
 
-      if (director_id) {
-        queries.push({
-          director_id,
-        });
-      }
+			if (director_id) {
+				queries.push({
+					director_id,
+				});
+			}
 
-      if (actor_id) {
-        queries.push({
-          actor_ids: actor_id,
-        });
-      }
+			if (actor_id) {
+				queries.push({
+					actor_ids: actor_id,
+				});
+			}
 
-      const filter = queries.length ? { $or: queries } : undefined;
+			const filter = queries.length ? { $or: queries } : undefined;
 
-      const docs = await ctx.dbMovies.find(filter).toArray();
-      return {
-        success: true,
-        docs,
-      };
-    },
-  },
-  Training_Movies_Mutation: {
-    insert: async (parent, args, ctx) => {
-      const { movies } = args;
+			const docs = await ctx.dbMovies.find(filter).toArray();
+			return {
+				success: true,
+				docs,
+			};
+		},
+	},
+	Training_Movies_Mutation: {
+		insert: async (parent, args, ctx) => {
+			const { movies } = args;
 
-      if (!movies.length) {
-        throw new Error('No movies provided');
-      }
+			if (!movies.length) {
+				throw new Error('No movies provided');
+			}
 
-      let errors = [];
-      movies.forEach((movie) => {
-        if (!movie.title) {
-          errors.push(
-            `"Movie missing required field \`title\`: \`${JSON.stringify(
-              movie,
-            )}\`"`,
-          );
-        }
+			let errors = [];
+			movies.forEach((movie) => {
+				if (!movie.title) {
+					errors.push(
+						`"Movie missing required field \`title\`: \`${JSON.stringify(
+							movie,
+						)}\`"`,
+					);
+				}
 
-        if (!movie.release_date) {
-          errors.push(
-            `"Movie missing required field \`release_date\`: \`${JSON.stringify(
-              movie,
-            )}\`"`,
-          );
-        }
-      });
+				if (!movie.release_date) {
+					errors.push(
+						`"Movie missing required field \`release_date\`: \`${JSON.stringify(
+							movie,
+						)}\`"`,
+					);
+				}
+			});
 
-      if (errors.length) {
-        throw new Error(
-          `Added 0 movies due to one or more errors: ${errors.join(
-            ', ',
-          )}`,
-        );
-      }
+			if (errors.length) {
+				throw new Error(
+					`Added 0 movies due to one or more errors: ${errors.join(
+						', ',
+					)}`,
+				);
+			}
 
-      await ctx.dbMovies.insertMany(movies);
+			await ctx.dbMovies.insertMany(movies);
 
-      return {
-        success: true,
-        message: `Added movies: ${movies
-          .reduce((acc, cur) => {
-            return [...acc, cur.title];
-          }, [])
-          .join(', ')}`,
-      };
-    },
-    remove: async (parent, args, ctx) => {
-      const { ids } = args;
+			return {
+				success: true,
+				message: `Added movies: ${movies
+					.reduce((acc, cur) => {
+						return [...acc, cur.title];
+					}, [])
+					.join(', ')}`,
+			};
+		},
+		remove: async (parent, args, ctx) => {
+			const { ids } = args;
 
-      let filter;
-      if (ids && ids.length) {
-        filter = {
-          _id: { $in: ids },
-        };
-      }
+			let filter;
+			if (ids && ids.length) {
+				filter = {
+					_id: { $in: ids },
+				};
+			}
 
-      const result = await ctx.dbMovies.deleteMany(filter);
+			const result = await ctx.dbMovies.deleteMany(filter);
 
-      const { deletedCount } = result;
+			const { deletedCount } = result;
 
-      return {
-        success: true,
-        message: `Deleted ${deletedCount} ${
-          deletedCount === 1 ? 'movie' : 'movies'
-        }`,
-      };
-    },
-  },
+			return {
+				success: true,
+				message: `Deleted ${deletedCount} ${
+					deletedCount === 1 ? 'movie' : 'movies'
+				}`,
+			};
+		},
+	},
 };

@@ -18,75 +18,75 @@ const dbName = process.env.RDT_GRAPHQL_DB_NAME || 'rdt';
 const dbClient = new MongoClient(dbUrl);
 
 function errorHandler(err, req, res, next) {
-  if (process.env.NODE_ENV !== 'production') {
-    if (res.headersSent) {
-      return next(err);
-    }
+	if (process.env.NODE_ENV !== 'production') {
+		if (res.headersSent) {
+			return next(err);
+		}
 
-    return res
-      .status(500)
-      .json({ success: false, message: err.toString() });
-  }
+		return res
+			.status(500)
+			.json({ success: false, message: err.toString() });
+	}
 
-  console.error(err);
+	console.error(err);
 
-  if (res.headersSent) {
-    return next(new Error('An unknown error occured'));
-  }
+	if (res.headersSent) {
+		return next(new Error('An unknown error occured'));
+	}
 
-  res
-    .status(500)
-    .json({ success: false, message: 'An unknown error occured' });
+	res
+		.status(500)
+		.json({ success: false, message: 'An unknown error occured' });
 }
 
 async function runMigrations(db) {
-  await db.createCollection('movies');
-  await db.createCollection('people');
+	await db.createCollection('movies');
+	await db.createCollection('people');
 }
 
 const schema = await schemaLoader({
-  paths: ['/app/lib/graphql'],
+	paths: ['/app/lib/graphql'],
 });
 
 const server = new ApolloServer({
-  schema,
+	schema,
 });
 await server.start();
 
 app.get('/status', (req, res) => {
-  res.json({
-    start: startTime,
-  });
+	res.json({
+		start: startTime,
+	});
 });
 
 app.use(
-  '/',
-  cors(),
-  express.json(),
-  expressMiddleware(server, {
-    context: async () => {
-      await dbClient.connect((err) => {
-        if (err) throw err;
-      });
+	'/',
+	cors(),
+	express.json(),
+	expressMiddleware(server, {
+		context: async () => {
+			await dbClient.connect((err) => {
+				if (err) throw err;
+			});
 
-      process.on('exit', async () => {
-        await dbClient.close();
-      });
+			process.on('exit', async () => {
+				await dbClient.close();
+			});
 
-      const db = dbClient.db(dbName);
+			const db = dbClient.db(dbName);
 
-      await runMigrations(db);
+			await runMigrations(db);
 
-      return {
-        dbMovies: db.collection('movies'),
-        dbPeople: db.collection('people'),
-      };
-    },
-  }),
+			return {
+				dbMovies: db.collection('movies'),
+				dbPeople: db.collection('people'),
+			};
+		},
+	}),
 );
 
 app.use(errorHandler);
 
 app.listen(port, () => {
-  console.log(`GraphQL listening on port ${port}!`);
+	console.log(`GraphQL listening on port ${port}!`);
 });
