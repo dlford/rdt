@@ -9,16 +9,16 @@
     "style": "eslint --fix ./lib --ext js"
   },
   "dependencies": {
-    "@apollo/server": "^4.12.0",
-    "@simpleview/sv-graphql-client": "^4.1.3",
-    "@simpleview/sv-mongo-graphql-utils": "^4.1.4",
-    "graphql": "^16.10.0",
-    "mongodb": "^6.13.0"
+    "@apollo/server": "4.12.0",
+    "@simpleview/sv-graphql-client": "4.1.3",
+    "@simpleview/sv-mongo-graphql-utils": "4.1.4",
+    "graphql": "16.10.0",
+    "mongodb": "6.13.0"
   },
   "devDependencies": {
-    "@simpleview/mochalib": "^2.0.2",
-    "eslint": "^9.27.0",
-    "mocha": "^11.1.0"
+    "@simpleview/mochalib": "2.0.2",
+    "eslint": "9.27.0",
+    "mocha": "11.1.0"
   },
   "type": "module"
 }

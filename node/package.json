@@ -13,7 +13,7 @@
     "@simpleview/rd-training-client": "file:../client"
   },
   "devDependencies": {
-    "@simpleview/mochalib": "^2.0.2",
-    "mocha": "^11.1.0"
+    "@simpleview/mochalib": "2.0.2",
+    "mocha": "11.1.0"
   }
 }
