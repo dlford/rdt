@@ -8,12 +8,14 @@ const graphServer = new TrainingPrefix({
 	graphUrl: 'http://localhost:4000',
 });
 
-describe('insert_people', async () => {
+const context = {};
+
+describe('insert_people', function () {
 	after(async () => {
 		const personQuery = await graphServer.find_people({
 			input: {
-				first_name: 'NotARealFirstName',
-				last_name: 'NotARealLastName',
+				first_name: 'InsertPoepleTestFirstName',
+				last_name: 'InsertPoepleTestLastName',
 			},
 			fields: `
 				docs {
@@ -40,13 +42,13 @@ describe('insert_people', async () => {
 			args: {
 				method: 'insert_people',
 				variables: {
-					people: [{ first_name: 'NotARealFirstName' }],
+					people: [{ first_name: 'InsertPoepleTestFirstName' }],
 				},
 				fields: `
 						success
 					`,
 				error:
-					'Variable "$people" got invalid value { first_name: "NotARealFirstName" } at "people[0]"; Field "last_name" of required type "String!" was not provided.',
+					'Variable "$people" got invalid value { first_name: "InsertPoepleTestFirstName" } at "people[0]"; Field "last_name" of required type "String!" was not provided.',
 			},
 		},
 		{
@@ -54,13 +56,13 @@ describe('insert_people', async () => {
 			args: {
 				method: 'insert_people',
 				variables: {
-					people: [{ last_name: 'NotARealLastName' }],
+					people: [{ last_name: 'InsertPoepleTestLastName' }],
 				},
 				fields: `
 						success
 					`,
 				error:
-					'Variable "$people" got invalid value { last_name: "NotARealLastName" } at "people[0]"; Field "first_name" of required type "String!" was not provided.',
+					'Variable "$people" got invalid value { last_name: "InsertPoepleTestLastName" } at "people[0]"; Field "first_name" of required type "String!" was not provided.',
 			},
 		},
 		{
@@ -68,13 +70,15 @@ describe('insert_people', async () => {
 			args: {
 				method: 'insert_people',
 				variables: {
-					people: [{ first_name: 7, last_name: 'NotARealLastName' }],
+					people: [
+						{ first_name: 7, last_name: 'InsertPoepleTestLastName' },
+					],
 				},
 				fields: `
 						success
 					`,
 				error:
-          'Variable "$people" got invalid value 7 at "people[0].first_name"; String cannot represent a non string value: 7',
+					'Variable "$people" got invalid value 7 at "people[0].first_name"; String cannot represent a non string value: 7',
 			},
 		},
 		{
@@ -84,8 +88,8 @@ describe('insert_people', async () => {
 				variables: {
 					people: [
 						{
-							first_name: 'NotARealFirstName',
-							last_name: 'NotARealLastName',
+							first_name: 'InsertPoepleTestFirstName',
+							last_name: 'InsertPoepleTestLastName',
 						},
 					],
 				},
@@ -102,8 +106,8 @@ describe('insert_people', async () => {
 			args: {
 				method: 'find_people',
 				variables: {
-					first_name: 'NotARealFirstName',
-					last_name: 'NotARealLastName',
+					first_name: 'InsertPoepleTestFirstName',
+					last_name: 'InsertPoepleTestLastName',
 				},
 				fields: `
 						docs {
@@ -116,8 +120,8 @@ describe('insert_people', async () => {
 					docs: [
 						{
 							id: { type: 'string' },
-							first_name: 'NotARealFirstName',
-							last_name: 'NotARealLastName',
+							first_name: 'InsertPoepleTestFirstName',
+							last_name: 'InsertPoepleTestLastName',
 						},
 					],
 				},
@@ -127,8 +131,12 @@ describe('insert_people', async () => {
 
 	testArray(tests, async (test) => {
 		try {
+			let input = test?.variables;
+			if (typeof test?.variables === 'function') {
+				input = test?.variables?.(context);
+			}
 			const result = await graphServer[test.method]({
-				input: test.variables,
+				input,
 				fields: test.fields,
 			});
 			deepCheck(result, test.result);

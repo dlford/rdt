@@ -49,6 +49,8 @@ services:
         - action: sync+restart
           path: ./graphql/lib
           target: /app/lib
+          ignore:
+            - ./graphql/lib/test
         - action: rebuild
           path: ./graphql/package.json
         - action: rebuild
