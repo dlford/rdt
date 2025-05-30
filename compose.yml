@@ -42,6 +42,8 @@ services:
       - "4000:4000"
     depends_on:
       - mongo
+    volumes:
+      - ./client:/app/node_modules/@simpleview/rd-training-client
     develop:
       watch:
         - action: sync+restart
@@ -51,5 +53,11 @@ services:
           path: ./graphql/package.json
         - action: rebuild
           path: ./graphql/Dockerfile
+        - action: rebuild
+          path: ./client/src
+        - action: rebuild
+          path: ./client/package.json
+        - action: rebuild
+          path: ./client/Dockerfile
 volumes:
   db_data:

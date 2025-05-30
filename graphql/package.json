@@ -5,17 +5,19 @@
   "license": "MIT",
   "scripts": {
     "start": "node lib/server.js",
-    "test": "mocha lib/test/index.test.js",
-    "style": "eslint --fix ./lib --ext js"
+    "test": "mocha lib/test/**/*.cjs",
+    "style": "eslint --fix ./lib --ext js --ext cjs"
   },
   "dependencies": {
     "@apollo/server": "4.12.0",
     "@simpleview/sv-graphql-client": "4.1.3",
     "@simpleview/sv-mongo-graphql-utils": "4.1.4",
     "graphql": "16.10.0",
-    "mongodb": "6.13.0"
+    "mongodb": "6.13.0",
+    "@simpleview/rd-training-client": "file:../client"
   },
   "devDependencies": {
+    "@simpleview/assertlib": "1.2.1",
     "@simpleview/mochalib": "2.0.2",
     "eslint": "9.27.0",
     "mocha": "11.1.0"

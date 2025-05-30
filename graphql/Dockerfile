@@ -3,6 +3,8 @@ WORKDIR /app
 COPY package.json .
 COPY yarn.lock .
 
+COPY --from=rdt-client /app /client
+
 RUN yarn install --immutable --immutable-cache --check-cache && \
     yarn cache clean
 
