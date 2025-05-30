@@ -14,8 +14,8 @@ describe('insert_people', function () {
 	after(async () => {
 		const personQuery = await graphServer.find_people({
 			input: {
-				first_name: 'InsertPoepleTestFirstName',
-				last_name: 'InsertPoepleTestLastName',
+				first_name: 'InsertPeopleTestFirstName',
+				last_name: 'InsertPeopleTestLastName',
 			},
 			fields: `
 				docs {
@@ -42,13 +42,13 @@ describe('insert_people', function () {
 			args: {
 				method: 'insert_people',
 				variables: {
-					people: [{ first_name: 'InsertPoepleTestFirstName' }],
+					people: [{ first_name: 'InsertPeopleTestFirstName' }],
 				},
 				fields: `
 						success
 					`,
 				error:
-					'Variable "$people" got invalid value { first_name: "InsertPoepleTestFirstName" } at "people[0]"; Field "last_name" of required type "String!" was not provided.',
+					'Variable "$people" got invalid value { first_name: "InsertPeopleTestFirstName" } at "people[0]"; Field "last_name" of required type "String!" was not provided.',
 			},
 		},
 		{
@@ -56,13 +56,13 @@ describe('insert_people', function () {
 			args: {
 				method: 'insert_people',
 				variables: {
-					people: [{ last_name: 'InsertPoepleTestLastName' }],
+					people: [{ last_name: 'InsertPeopleTestLastName' }],
 				},
 				fields: `
 						success
 					`,
 				error:
-					'Variable "$people" got invalid value { last_name: "InsertPoepleTestLastName" } at "people[0]"; Field "first_name" of required type "String!" was not provided.',
+					'Variable "$people" got invalid value { last_name: "InsertPeopleTestLastName" } at "people[0]"; Field "first_name" of required type "String!" was not provided.',
 			},
 		},
 		{
@@ -71,7 +71,7 @@ describe('insert_people', function () {
 				method: 'insert_people',
 				variables: {
 					people: [
-						{ first_name: 7, last_name: 'InsertPoepleTestLastName' },
+						{ first_name: 7, last_name: 'InsertPeopleTestLastName' },
 					],
 				},
 				fields: `
@@ -88,8 +88,8 @@ describe('insert_people', function () {
 				variables: {
 					people: [
 						{
-							first_name: 'InsertPoepleTestFirstName',
-							last_name: 'InsertPoepleTestLastName',
+							first_name: 'InsertPeopleTestFirstName',
+							last_name: 'InsertPeopleTestLastName',
 						},
 					],
 				},
@@ -106,8 +106,8 @@ describe('insert_people', function () {
 			args: {
 				method: 'find_people',
 				variables: {
-					first_name: 'InsertPoepleTestFirstName',
-					last_name: 'InsertPoepleTestLastName',
+					first_name: 'InsertPeopleTestFirstName',
+					last_name: 'InsertPeopleTestLastName',
 				},
 				fields: `
 						docs {
@@ -120,8 +120,8 @@ describe('insert_people', function () {
 					docs: [
 						{
 							id: { type: 'string' },
-							first_name: 'InsertPoepleTestFirstName',
-							last_name: 'InsertPoepleTestLastName',
+							first_name: 'InsertPeopleTestFirstName',
+							last_name: 'InsertPeopleTestLastName',
 						},
 					],
 				},

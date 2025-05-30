@@ -16,8 +16,8 @@ describe('find_people', function () {
 			input: {
 				people: [
 					{
-						first_name: 'FindPoepleTestFirstName',
-						last_name: 'FindPoepleTestLastName',
+						first_name: 'FindPeopleTestFirstName',
+						last_name: 'FindPeopleTestLastName',
 					},
 				],
 			},
@@ -28,8 +28,8 @@ describe('find_people', function () {
 
 		context.person = await graphServer.find_people({
 			input: {
-				first_name: 'FindPoepleTestFirstName',
-				last_name: 'FindPoepleTestLastName',
+				first_name: 'FindPeopleTestFirstName',
+				last_name: 'FindPeopleTestLastName',
 			},
 			fields: `
 				docs {
@@ -73,8 +73,8 @@ describe('find_people', function () {
 					docs: [
 						{
 							id: { type: 'string' },
-							first_name: 'FindPoepleTestFirstName',
-							last_name: 'FindPoepleTestLastName',
+							first_name: 'FindPeopleTestFirstName',
+							last_name: 'FindPeopleTestLastName',
 						},
 					],
 				},
@@ -85,7 +85,7 @@ describe('find_people', function () {
 			args: {
 				method: 'find_people',
 				variables: {
-					first_name: 'FindPoepleTestFirstName',
+					first_name: 'FindPeopleTestFirstName',
 				},
 				fields: `
 					docs {
@@ -95,7 +95,7 @@ describe('find_people', function () {
 				result: {
 					docs: [
 						{
-							last_name: 'FindPoepleTestLastName',
+							last_name: 'FindPeopleTestLastName',
 						},
 					],
 				},
@@ -106,7 +106,7 @@ describe('find_people', function () {
 			args: {
 				method: 'find_people',
 				variables: {
-					last_name: 'FindPoepleTestLastName',
+					last_name: 'FindPeopleTestLastName',
 				},
 				fields: `
 					docs {
@@ -116,7 +116,7 @@ describe('find_people', function () {
 				result: {
 					docs: [
 						{
-							first_name: 'FindPoepleTestFirstName',
+							first_name: 'FindPeopleTestFirstName',
 						},
 					],
 				},
@@ -128,8 +128,8 @@ describe('find_people', function () {
 				method: 'find_people',
 				variables: (context) => ({
 					id: context?.person?.docs?.[0]?.id,
-					first_name: 'FindPoepleTestFirstName',
-					last_name: 'FindPoepleTestLastName',
+					first_name: 'FindPeopleTestFirstName',
+					last_name: 'FindPeopleTestLastName',
 				}),
 				fields: `
 					docs {
@@ -139,7 +139,7 @@ describe('find_people', function () {
 				result: {
 					docs: [
 						{
-							last_name: 'FindPoepleTestLastName',
+							last_name: 'FindPeopleTestLastName',
 						},
 					],
 				},
@@ -150,7 +150,7 @@ describe('find_people', function () {
 			args: {
 				method: 'find_people',
 				variables: {
-					first_name: 'FindPoepleTestFirstNameNOTEXIST',
+					first_name: 'FindPeopleTestFirstNameNOTEXIST',
 				},
 				fields: `
 					docs {
