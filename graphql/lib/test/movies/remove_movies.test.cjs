@@ -10,14 +10,14 @@ const graphServer = new TrainingPrefix({
 
 const context = {};
 
-describe('remove_people', function () {
+describe('remove_movies', function () {
 	before(async () => {
-		await graphServer.insert_people({
+		await graphServer.insert_movies({
 			input: {
-				people: [
+				movies: [
 					{
-						first_name: 'RemovePeopleTestFirstName',
-						last_name: 'RemovePeopleTestLastName',
+						title: 'RemoveMoviesTestTitle',
+						release_date: '0001-01-01',
 					},
 				],
 			},
@@ -26,10 +26,9 @@ describe('remove_people', function () {
 			`,
 		});
 
-		context.person = await graphServer.find_people({
+		context.movie = await graphServer.find_movies({
 			input: {
-				first_name: 'RemovePeopleTestFirstName',
-				last_name: 'RemovePeopleTestLastName',
+				title: 'RemoveMoviesTestTitle',
 			},
 			fields: `
 				docs {
@@ -43,7 +42,7 @@ describe('remove_people', function () {
 		{
 			name: 'invalid bad id type',
 			args: {
-				method: 'remove_people',
+				method: 'remove_movies',
 				variables: {
 					ids: ['123'],
 				},
@@ -57,7 +56,7 @@ describe('remove_people', function () {
 		{
 			name: 'invalid wrong id',
 			args: {
-				method: 'remove_people',
+				method: 'remove_movies',
 				variables: {
 					ids: [{ id: '012345678910111213141516' }],
 				},
@@ -67,16 +66,16 @@ describe('remove_people', function () {
 				`,
 				result: {
 					success: true,
-					message: 'Deleted 0 people',
+					message: 'Deleted 0 movies',
 				},
 			},
 		},
 		{
 			name: 'valid remove by id',
 			args: {
-				method: 'remove_people',
+				method: 'remove_movies',
 				variables: (context) => ({
-					ids: context?.person?.docs?.map((doc) => (doc.id)),
+					ids: context?.movie?.docs?.map((doc) => doc.id),
 				}),
 				fields: `
 					success
@@ -84,16 +83,16 @@ describe('remove_people', function () {
 				`,
 				result: {
 					success: true,
-					message: 'Deleted 1 person',
+					message: 'Deleted 1 movie',
 				},
 			},
 		},
 		{
 			name: 'verify removed',
 			args: {
-				method: 'find_people',
+				method: 'find_movies',
 				variables: (context) => ({
-					id: context?.person?.docs?.[0]?.id,
+					id: context?.movie?.docs?.[0]?.id,
 				}),
 				fields: `
 					docs {

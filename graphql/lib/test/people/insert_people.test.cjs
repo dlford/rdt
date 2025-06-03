@@ -27,7 +27,7 @@ describe('insert_people', function () {
 		if (personQuery.docs.length) {
 			await graphServer.remove_people({
 				input: {
-					ids: personQuery.docs.map((doc) => ({ id: doc.id })),
+					ids: personQuery.docs.map((doc) => (doc.id)),
 				},
 				fields: `
 					success

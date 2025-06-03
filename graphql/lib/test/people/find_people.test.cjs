@@ -43,9 +43,7 @@ describe('find_people', function () {
 		if (context?.person?.docs?.length) {
 			await graphServer.remove_people({
 				input: {
-					ids: context?.person?.docs?.map((doc) => ({
-						id: doc.id,
-					})),
+					ids: context?.person?.docs?.map((doc) => (doc.id)),
 				},
 				fields: `
 					success

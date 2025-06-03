@@ -43,9 +43,7 @@ describe('insert_movies', function () {
 		if (context?.person?.docs?.length) {
 			await graphServer.remove_people({
 				input: {
-					ids: context?.person?.docs?.map((doc) => ({
-						id: doc.id,
-					})),
+					ids: context?.person?.docs?.map((doc) => (doc.id)),
 				},
 				fields: `
 					success
@@ -67,7 +65,7 @@ describe('insert_movies', function () {
 		if (movieQuery.docs.length) {
 			await graphServer.remove_movies({
 				input: {
-					ids: movieQuery.docs.map((doc) => ({ id: doc.id })),
+					ids: movieQuery.docs.map((doc) => (doc.id)),
 				},
 				fields: `
 					success
