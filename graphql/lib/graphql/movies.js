@@ -14,6 +14,7 @@ export const typeDefs = `#graphql
   }
 
   input Training_Movies_Insert_Input {
+		id: ObjectID
     title: String!
     release_date: ISODateString!
     director_id: ObjectID
@@ -162,6 +163,8 @@ export const resolvers = {
 						)}\`"`,
 					);
 				}
+
+				movie._id = movie.id;
 			});
 
 			if (errors.length) {

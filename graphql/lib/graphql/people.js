@@ -12,6 +12,7 @@ export const typeDefs = `#graphql
   }
 
   input Training_People_Insert_Input {
+		id: ObjectID
     first_name: String!
     last_name: String!
   }
@@ -136,6 +137,8 @@ export const resolvers = {
 						)}\`"`,
 					);
 				}
+
+				person._id = person.id;
 			});
 
 			if (errors.length) {

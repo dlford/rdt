@@ -1,6 +1,7 @@
 const assert = require('assert');
 const { testArray } = require('@simpleview/mochalib');
 const { deepCheck } = require('@simpleview/assertlib');
+const { ObjectId } = require('mongodb');
 
 const { TrainingPrefix } = require('@simpleview/rd-training-client');
 
@@ -8,206 +9,199 @@ const graphServer = new TrainingPrefix({
 	graphUrl: 'http://localhost:4000',
 });
 
-const context = {};
+const testPeople = [
+	{
+		id: new ObjectId().toString(),
+		first_name: 'InsertPeopleTestFirstName1',
+		last_name: 'InsertPeopleTestLastName1',
+	},
+	{
+		id: new ObjectId().toString(),
+		first_name: 'InsertPeopleTestFirstName2',
+		last_name: 'InsertPeopleTestLastName2',
+	},
+	{
+		id: new ObjectId().toString(),
+		first_name: 'InsertPeopleTestFirstName3',
+		last_name: 'InsertPeopleTestLastName3',
+	},
+];
 
 describe('find_people', function () {
 	before(async () => {
+		await graphServer.remove_people({
+			fields: 'success',
+		});
 		await graphServer.insert_people({
 			input: {
-				people: [
-					{
-						first_name: 'FindPeopleTestFirstName',
-						last_name: 'FindPeopleTestLastName',
+				people: testPeople,
+			},
+			fields: 'success',
+		});
+	});
+
+	describe('invalid inputs', function () {
+		const tests = [
+			{
+				name: 'find by first name wrong type',
+				args: {
+					method: 'find_people',
+					variables: {
+						first_name: 7,
 					},
-				],
+					error:
+						'Variable "$first_name" got invalid value 7; String cannot represent a non string value: 7',
+				},
 			},
-			fields: `
-				success
-			`,
-		});
+			{
+				name: 'find by last name wrong type',
+				args: {
+					method: 'find_people',
+					variables: {
+						last_name: 7,
+					},
+					error:
+						'Variable "$last_name" got invalid value 7; String cannot represent a non string value: 7',
+				},
+			},
+			{
+				name: 'find by id wrong type',
+				args: {
+					method: 'find_people',
+					variables: {
+						id: '123',
+					},
+					error:
+						'Variable "$id" got invalid value "123"; Expected type "ObjectID". input must be a 24 character hex string, 12 byte Uint8Array, or an integer',
+				},
+			},
+		];
 
-		context.person = await graphServer.find_people({
-			input: {
-				first_name: 'FindPeopleTestFirstName',
-				last_name: 'FindPeopleTestLastName',
-			},
-			fields: `
-				docs {
-					id
-				}
-			`,
-		});
-	});
-
-	after(async () => {
-		if (context?.person?.docs?.length) {
-			await graphServer.remove_people({
-				input: {
-					ids: context?.person?.docs?.map((doc) => (doc.id)),
-				},
-				fields: `
-					success
-				`,
-			});
-		}
-	});
-
-	const tests = [
-		{
-			name: 'valid find by id',
-			args: {
-				method: 'find_people',
-				variables: (context) => ({
-					id: context?.person?.docs?.[0]?.id,
-				}),
-				fields: `
-					docs {
-						id
-						first_name
-						last_name
-					}
-				`,
-				result: {
-					docs: [
-						{
-							id: { type: 'string' },
-							first_name: 'FindPeopleTestFirstName',
-							last_name: 'FindPeopleTestLastName',
-						},
-					],
-				},
-			},
-		},
-		{
-			name: 'valid find by first name',
-			args: {
-				method: 'find_people',
-				variables: {
-					first_name: 'FindPeopleTestFirstName',
-				},
-				fields: `
-					docs {
-						last_name
-					}
-				`,
-				result: {
-					docs: [
-						{
-							last_name: 'FindPeopleTestLastName',
-						},
-					],
-				},
-			},
-		},
-		{
-			name: 'valid find by last name',
-			args: {
-				method: 'find_people',
-				variables: {
-					last_name: 'FindPeopleTestLastName',
-				},
-				fields: `
-					docs {
-						first_name
-					}
-				`,
-				result: {
-					docs: [
-						{
-							first_name: 'FindPeopleTestFirstName',
-						},
-					],
-				},
-			},
-		},
-		{
-			name: 'valid find by first name, last name, and id',
-			args: {
-				method: 'find_people',
-				variables: (context) => ({
-					id: context?.person?.docs?.[0]?.id,
-					first_name: 'FindPeopleTestFirstName',
-					last_name: 'FindPeopleTestLastName',
-				}),
-				fields: `
-					docs {
-						last_name
-					}
-				`,
-				result: {
-					docs: [
-						{
-							last_name: 'FindPeopleTestLastName',
-						},
-					],
-				},
-			},
-		},
-		{
-			name: 'invalid find by wrong first name',
-			args: {
-				method: 'find_people',
-				variables: {
-					first_name: 'FindPeopleTestFirstNameNOTEXIST',
-				},
-				fields: `
-					docs {
-						last_name
-					}
-				`,
-				result: {
-					docs: [],
-				},
-			},
-		},
-		{
-			name: 'invalid find by last name wrong type',
-			args: {
-				method: 'find_people',
-				variables: {
-					last_name: 7,
-				},
-				fields: `
-					docs {
-						first_name
-					}
-				`,
-				error:
-					'Variable "$last_name" got invalid value 7; String cannot represent a non string value: 7',
-			},
-		},
-		{
-			name: 'invalid find by id wrong type',
-			args: {
-				method: 'find_people',
-				variables: {
-					id: '123',
-				},
-				fields: `
-					docs {
-						first_name
-					}
-				`,
-				error:
-					'Variable "$id" got invalid value "123"; Expected type "ObjectID". input must be a 24 character hex string, 12 byte Uint8Array, or an integer',
-			},
-		},
-	];
-
-	testArray(tests, async (test) => {
-		try {
-			let input = test?.variables;
-			if (typeof test?.variables === 'function') {
-				input = test?.variables?.(context);
+		testArray(tests, async (test) => {
+			try {
+				await graphServer.find_people({
+					input: test.variables,
+					fields: `
+						docs {
+							id
+						}
+					`,
+				});
+			} catch (err) {
+				assert.notStrictEqual(test.error, undefined, err);
+				assert.strictEqual(err.message, test.error);
 			}
-			const result = await graphServer[test.method]({
-				input,
+		});
+	});
+
+	describe('valid inputs', function () {
+		const tests = [
+			{
+				name: 'find with no results',
+				args: {
+					variables: {
+						id: new ObjectId().toString(),
+					},
+					fields: `
+						docs {
+							id
+						}
+					`,
+					result: {
+						docs: [],
+					},
+				},
+			},
+			{
+				name: 'find one person by id',
+				args: {
+					variables: {
+						id: testPeople[0].id,
+					},
+					fields: `
+						docs {
+							id
+							first_name
+							last_name
+						}
+					`,
+					result: {
+						docs: [testPeople[0]],
+					},
+				},
+			},
+			{
+				name: 'find one person by first name',
+				args: {
+					variables: {
+						first_name: testPeople[1].first_name,
+					},
+					fields: `
+						docs {
+							id
+						}
+					`,
+					result: {
+						docs: [
+							{
+								id: testPeople[1].id,
+							},
+						],
+					},
+				},
+			},
+			{
+				name: 'find one person by last name',
+				args: {
+					variables: {
+						last_name: testPeople[2].last_name,
+					},
+					fields: `
+						docs {
+							id
+						}
+					`,
+					result: {
+						docs: [
+							{
+								id: testPeople[2].id,
+							},
+						],
+					},
+				},
+			},
+			{
+				name: 'find two people by first and last name',
+				args: {
+					variables: {
+						first_name: testPeople[0].first_name,
+						last_name: testPeople[1].last_name,
+					},
+					fields: `
+						docs {
+							id
+						}
+					`,
+					result: {
+						docs: [
+							{
+								id: testPeople[0].id,
+							},
+							{
+								id: testPeople[1].id,
+							},
+						],
+					},
+				},
+			},
+		];
+
+		testArray(tests, async (test) => {
+			const result = await graphServer.find_people({
+				input: test.variables,
 				fields: test.fields,
 			});
 			deepCheck(result, test.result);
-		} catch (err) {
-			assert.notStrictEqual(test.error, undefined, err);
-			assert.strictEqual(err.message, test.error);
-		}
+		});
 	});
 });
