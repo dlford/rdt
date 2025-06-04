@@ -1,6 +1,7 @@
 const assert = require('assert');
 const { testArray } = require('@simpleview/mochalib');
 const { deepCheck } = require('@simpleview/assertlib');
+const { ObjectId } = require('mongodb');
 
 const { TrainingPrefix } = require('@simpleview/rd-training-client');
 
@@ -8,118 +9,176 @@ const graphServer = new TrainingPrefix({
 	graphUrl: 'http://localhost:4000',
 });
 
-const context = {};
+const testMovies = [
+	{
+		id: new ObjectId().toString(),
+		title: 'RemoveMoviesTestTitle1',
+		release_date: '0001-01-01',
+	},
+	{
+		id: new ObjectId().toString(),
+		title: 'RemoveMoviesTestTitle2',
+		release_date: '0001-01-02',
+	},
+	{
+		id: new ObjectId().toString(),
+		title: 'RemoveMoviesTestTitle3',
+		release_date: '0001-01-03',
+	},
+];
 
 describe('remove_movies', function () {
-	before(async () => {
-		await graphServer.insert_movies({
-			input: {
-				movies: [
-					{
-						title: 'RemoveMoviesTestTitle',
-						release_date: '0001-01-01',
+	describe('invalid inputs', function () {
+		const tests = [
+			{
+				name: 'bad id type',
+				args: {
+					variables: {
+						ids: ['123'],
 					},
-				],
+					error:
+						'Variable "$ids" got invalid value "123" at "ids[0]"; Expected type "ObjectID". input must be a 24 character hex string, 12 byte Uint8Array, or an integer',
+				},
 			},
-			fields: `
-				success
-			`,
-		});
+		];
 
-		context.movie = await graphServer.find_movies({
-			input: {
-				title: 'RemoveMoviesTestTitle',
-			},
-			fields: `
-				docs {
-					id
-				}
-			`,
+		testArray(tests, async (test) => {
+			try {
+				await graphServer.remove_movies({
+					input: test.variables,
+					fields: 'success',
+				});
+			} catch (err) {
+				assert.notStrictEqual(test.error, undefined, err);
+				assert.strictEqual(err.message, test.error);
+			}
 		});
 	});
 
-	const tests = [
-		{
-			name: 'invalid bad id type',
-			args: {
-				method: 'remove_movies',
-				variables: {
-					ids: ['123'],
+	describe('valid inputs', function () {
+		beforeEach(async () => {
+			await graphServer.remove_movies({
+				fields: 'success',
+			});
+			await graphServer.insert_movies({
+				input: {
+					movies: testMovies,
 				},
 				fields: `
 					success
 				`,
-				error:
-					'Variable "$ids" got invalid value "123" at "ids[0]"; Expected type "ObjectID". input must be a 24 character hex string, 12 byte Uint8Array, or an integer',
-			},
-		},
-		{
-			name: 'invalid wrong id',
-			args: {
-				method: 'remove_movies',
-				variables: {
-					ids: [{ id: '012345678910111213141516' }],
+			});
+		});
+
+		const tests = [
+			{
+				name: 'remove no movies',
+				args: {
+					variables: {
+						remove: {
+							ids: [new ObjectId().toString()],
+						},
+					},
+					result: {
+						remove: {
+							success: true,
+							message: 'Deleted 0 movies',
+						},
+						find: {
+							docs: testMovies.map((movie) => ({ id: movie.id })),
+						},
+					},
 				},
+			},
+			{
+				name: 'remove one movie',
+				args: {
+					variables: {
+						remove: {
+							ids: [testMovies[0].id],
+						},
+					},
+					result: {
+						remove: {
+							success: true,
+							message: 'Deleted 1 movie',
+						},
+						find: {
+							docs: [
+								{
+									id: testMovies[1].id,
+								},
+								{
+									id: testMovies[2].id,
+								},
+							],
+						},
+					},
+				},
+			},
+			{
+				name: 'remove two movies',
+				args: {
+					variables: {
+						remove: {
+							ids: [testMovies[0].id, testMovies[2].id],
+						},
+					},
+					result: {
+						remove: {
+							success: true,
+							message: 'Deleted 2 movies',
+						},
+						find: {
+							docs: [
+								{
+									id: testMovies[1].id,
+								},
+							],
+						},
+					},
+				},
+			},
+			{
+				name: 'remove all movies',
+				args: {
+					variables: {
+						remove: {
+							ids: [],
+						},
+					},
+					result: {
+						remove: {
+							success: true,
+							message: 'Deleted 3 movies',
+						},
+						find: {
+							docs: [],
+						},
+					},
+				},
+			},
+		];
+
+		testArray(tests, async (test) => {
+			const remove = await graphServer.remove_movies({
+				input: test.variables.remove,
 				fields: `
 					success
 					message
 				`,
-				result: {
-					success: true,
-					message: 'Deleted 0 movies',
-				},
-			},
-		},
-		{
-			name: 'valid remove by id',
-			args: {
-				method: 'remove_movies',
-				variables: (context) => ({
-					ids: context?.movie?.docs?.map((doc) => doc.id),
-				}),
-				fields: `
-					success
-					message
-				`,
-				result: {
-					success: true,
-					message: 'Deleted 1 movie',
-				},
-			},
-		},
-		{
-			name: 'verify removed',
-			args: {
-				method: 'find_movies',
-				variables: (context) => ({
-					id: context?.movie?.docs?.[0]?.id,
-				}),
+			});
+			deepCheck(remove, test.result.remove);
+
+			const find = await graphServer.find_movies({
+				input: test.variables.find,
 				fields: `
 					docs {
 						id
 					}
 				`,
-				result: {
-					docs: [],
-				},
-			},
-		},
-	];
-
-	testArray(tests, async (test) => {
-		try {
-			let input = test?.variables;
-			if (typeof test?.variables === 'function') {
-				input = test?.variables?.(context);
-			}
-			const result = await graphServer[test.method]({
-				input,
-				fields: test.fields,
 			});
-			deepCheck(result, test.result);
-		} catch (err) {
-			assert.notStrictEqual(test.error, undefined, err);
-			assert.strictEqual(err.message, test.error);
-		}
+			deepCheck(find, test.result.find);
+		});
 	});
 });
