@@ -3,53 +3,12 @@ const { testArray } = require('@simpleview/mochalib');
 const { deepCheck } = require('@simpleview/assertlib');
 const { ObjectId } = require('mongodb');
 
+const { testPeople, testMovies } = require('../testData.cjs');
 const { TrainingPrefix } = require('@simpleview/rd-training-client');
 
 const graphServer = new TrainingPrefix({
 	graphUrl: 'http://localhost:4000',
 });
-
-const testPeople = [
-	{
-		id: new ObjectId().toString(),
-		first_name: 'FindMoviesTestFirstName1',
-		last_name: 'FindMoviesTestLastName1',
-	},
-	{
-		id: new ObjectId().toString(),
-		first_name: 'FindMoviesTestFirstName2',
-		last_name: 'FindMoviesTestLastName2',
-	},
-	{
-		id: new ObjectId().toString(),
-		first_name: 'FindMoviesTestFirstName3',
-		last_name: 'FindMoviesTestLastName3',
-	},
-];
-
-const testMovies = [
-	{
-		id: new ObjectId().toString(),
-		title: 'FindMoviesTestTitle1',
-		release_date: '0001-01-01',
-		director_id: testPeople[0].id,
-		actor_ids: [testPeople[1].id, testPeople[2].id],
-	},
-	{
-		id: new ObjectId().toString(),
-		title: 'FindMoviesTestTitle2',
-		release_date: '0001-01-02',
-		director_id: testPeople[1].id,
-		actor_ids: [testPeople[0].id, testPeople[2].id],
-	},
-	{
-		id: new ObjectId().toString(),
-		title: 'FindMoviesTestTitle3',
-		release_date: '0001-01-03',
-		director_id: testPeople[2].id,
-		actor_ids: [testPeople[0].id, testPeople[1].id],
-	},
-];
 
 describe('find_movies', function () {
 	before(async () => {
@@ -61,13 +20,13 @@ describe('find_movies', function () {
 		});
 		await graphServer.insert_people({
 			input: {
-				people: testPeople,
+				people: [testPeople.one, testPeople.two, testPeople.three],
 			},
 			fields: 'success',
 		});
 		await graphServer.insert_movies({
 			input: {
-				movies: testMovies,
+				movies: [testMovies.one, testMovies.two, testMovies.three],
 			},
 			fields: 'success',
 		});
@@ -118,7 +77,6 @@ describe('find_movies', function () {
 					`,
 				});
 			} catch (err) {
-				assert.notStrictEqual(test.error, undefined, err);
 				assert.strictEqual(err.message, test.error);
 			}
 		});
@@ -132,133 +90,121 @@ describe('find_movies', function () {
 					variables: {
 						id: new ObjectId().toString(),
 					},
-					fields: `
-						docs {
-							id
-						}
-					`,
-					result: {
-						docs: [],
-					},
+					fields: 'id',
+					result: [],
 				},
 			},
 			{
 				name: 'find one movie by id',
 				args: {
 					variables: {
-						id: testMovies[0].id,
+						id: '000000000000000000000004',
 					},
 					fields: `
-						docs {
+						id
+						title
+						release_date
+						director {
 							id
-							title
-							release_date
-							director {
-								id
-								first_name
-								last_name
-							}
-							director_id
-							actors {
-								id
-								first_name
-								last_name
-							}
-							actor_ids
+							first_name
+							last_name
 						}
+						director_id
+						actors {
+							id
+							first_name
+							last_name
+						}
+						actor_ids
 					`,
-					result: {
-						docs: [
-							{
-								...testMovies[0],
-								director: testPeople[0],
-								actors: [testPeople[1], testPeople[2]],
+					result: [
+						{
+							id: '000000000000000000000004',
+							title: 'TestMovieTitle1',
+							release_date: '0001-01-01',
+							director_id: '000000000000000000000001',
+							actor_ids: [
+								'000000000000000000000002',
+								'000000000000000000000003',
+							],
+							director: {
+								id: '000000000000000000000001',
+								first_name: 'TestPersonFirstName1',
+								last_name: 'TestPersonLastName1',
 							},
-						],
-					},
+							actors: [
+								{
+									id: '000000000000000000000002',
+									first_name: 'TestPersonFirstName2',
+									last_name: 'TestPersonLastName2',
+								},
+								{
+									id: '000000000000000000000003',
+									first_name: 'TestPersonFirstName3',
+									last_name: 'TestPersonLastName3',
+								},
+							],
+						},
+					],
 				},
 			},
 			{
 				name: 'find one movie by title',
 				args: {
 					variables: {
-						title: testMovies[1].title,
+						title: 'TestMovieTitle2',
 					},
-					fields: `
-						docs {
-							id
-						}
-					`,
-					result: {
-						docs: [
-							{
-								id: testMovies[1].id,
-							},
-						],
-					},
+					fields: 'id',
+					result: [
+						{
+							id: '000000000000000000000005',
+						},
+					],
 				},
 			},
 			{
 				name: 'find one movie by release date',
 				args: {
 					variables: {
-						release_date: testMovies[2].release_date,
+						release_date: '0003-03-03',
 					},
-					fields: `
-						docs {
-							id
-						}
-					`,
-					result: {
-						docs: [
-							{
-								id: testMovies[2].id,
-							},
-						],
-					},
+					fields: 'id',
+					result: [
+						{
+							id: '000000000000000000000006',
+						},
+					],
 				},
 			},
 			{
 				name: 'find one movie by director id',
 				args: {
 					variables: {
-						director_id: testMovies[0].director_id,
+						director_id: '000000000000000000000001',
 					},
-					fields: `
-						docs {
-							id
-						}
-					`,
-					result: {
-						docs: [
-							{
-								id: testMovies[0].id,
-							},
-						],
-					},
+					fields: 'id',
+					result: [
+						{
+							id: '000000000000000000000004',
+						},
+					],
 				},
 			},
 			{
 				name: 'find movies by actor id',
 				args: {
 					variables: {
-						actor_id: testPeople[0].id,
+						actor_id: '000000000000000000000001',
 					},
-					fields: `
-						docs {
-							id
-						}
-					`,
-					result: {
-						docs: [
-							{
-								id: testMovies[1].id,
-							},
-							{
-								id: testMovies[2].id,
-							},
-						],
-					},
+					fields: 'id',
+					result: [
+						{
+							id: '000000000000000000000005',
+						},
+						{
+							id: '000000000000000000000006',
+						},
+					],
 				},
 			},
 		];
@@ -266,9 +212,9 @@ describe('find_movies', function () {
 		testArray(tests, async (test) => {
 			const result = await graphServer.find_movies({
 				input: test.variables,
-				fields: test.fields,
+				fields: `docs { ${test.fields} }`,
 			});
-			deepCheck(result, test.result);
+			deepCheck(result.docs, test.result);
 		});
 	});
 });

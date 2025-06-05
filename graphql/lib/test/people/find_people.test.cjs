@@ -3,29 +3,12 @@ const { testArray } = require('@simpleview/mochalib');
 const { deepCheck } = require('@simpleview/assertlib');
 const { ObjectId } = require('mongodb');
 
+const { testPeople } = require('../testData.cjs');
 const { TrainingPrefix } = require('@simpleview/rd-training-client');
 
 const graphServer = new TrainingPrefix({
 	graphUrl: 'http://localhost:4000',
 });
-
-const testPeople = [
-	{
-		id: new ObjectId().toString(),
-		first_name: 'InsertPeopleTestFirstName1',
-		last_name: 'InsertPeopleTestLastName1',
-	},
-	{
-		id: new ObjectId().toString(),
-		first_name: 'InsertPeopleTestFirstName2',
-		last_name: 'InsertPeopleTestLastName2',
-	},
-	{
-		id: new ObjectId().toString(),
-		first_name: 'InsertPeopleTestFirstName3',
-		last_name: 'InsertPeopleTestLastName3',
-	},
-];
 
 describe('find_people', function () {
 	before(async () => {
@@ -34,7 +17,7 @@ describe('find_people', function () {
 		});
 		await graphServer.insert_people({
 			input: {
-				people: testPeople,
+				people: [testPeople.one, testPeople.two, testPeople.three],
 			},
 			fields: 'success',
 		});
@@ -45,7 +28,6 @@ describe('find_people', function () {
 			{
 				name: 'find by first name wrong type',
 				args: {
-					method: 'find_people',
 					variables: {
 						first_name: 7,
 					},
@@ -56,7 +38,6 @@ describe('find_people', function () {
 			{
 				name: 'find by last name wrong type',
 				args: {
-					method: 'find_people',
 					variables: {
 						last_name: 7,
 					},
@@ -67,7 +48,6 @@ describe('find_people', function () {
 			{
 				name: 'find by id wrong type',
 				args: {
-					method: 'find_people',
 					variables: {
 						id: '123',
 					},
@@ -88,7 +68,6 @@ describe('find_people', function () {
 					`,
 				});
 			} catch (err) {
-				assert.notStrictEqual(test.error, undefined, err);
 				assert.strictEqual(err.message, test.error);
 			}
 		});
@@ -102,96 +81,74 @@ describe('find_people', function () {
 					variables: {
 						id: new ObjectId().toString(),
 					},
-					fields: `
-						docs {
-							id
-						}
-					`,
-					result: {
-						docs: [],
-					},
+					fields: 'id',
+					result: [],
 				},
 			},
 			{
 				name: 'find one person by id',
 				args: {
 					variables: {
-						id: testPeople[0].id,
+						id: '000000000000000000000001',
 					},
 					fields: `
-						docs {
-							id
-							first_name
-							last_name
-						}
+						id
+						first_name
+						last_name
 					`,
-					result: {
-						docs: [testPeople[0]],
-					},
+					result: [
+						{
+							id: '000000000000000000000001',
+							first_name: 'TestPersonFirstName1',
+							last_name: 'TestPersonLastName1',
+						},
+					],
 				},
 			},
 			{
 				name: 'find one person by first name',
 				args: {
 					variables: {
-						first_name: testPeople[1].first_name,
+						first_name: 'TestPersonFirstName2',
 					},
-					fields: `
-						docs {
-							id
-						}
-					`,
-					result: {
-						docs: [
-							{
-								id: testPeople[1].id,
-							},
-						],
-					},
+					fields: 'id',
+					result: [
+						{
+							id: '000000000000000000000002',
+						},
+					],
 				},
 			},
 			{
 				name: 'find one person by last name',
 				args: {
 					variables: {
-						last_name: testPeople[2].last_name,
+						last_name: 'TestPersonLastName3',
 					},
-					fields: `
-						docs {
-							id
-						}
-					`,
-					result: {
-						docs: [
-							{
-								id: testPeople[2].id,
-							},
-						],
-					},
+					fields: 'id',
+					result: [
+						{
+							id: '000000000000000000000003',
+						},
+					],
 				},
 			},
 			{
 				name: 'find two people by first and last name',
 				args: {
 					variables: {
-						first_name: testPeople[0].first_name,
-						last_name: testPeople[1].last_name,
+						first_name: 'TestPersonFirstName1',
+						last_name: 'TestPersonLastName2',
 					},
-					fields: `
-						docs {
-							id
-						}
-					`,
-					result: {
-						docs: [
-							{
-								id: testPeople[0].id,
-							},
-							{
-								id: testPeople[1].id,
-							},
-						],
-					},
+					fields: 'id',
+					result: [
+						{
+							id: '000000000000000000000001',
+						},
+						{
+							id: '000000000000000000000002',
+						},
+					],
 				},
 			},
 		];
@@ -199,9 +156,9 @@ describe('find_people', function () {
 		testArray(tests, async (test) => {
 			const result = await graphServer.find_people({
 				input: test.variables,
-				fields: test.fields,
+				fields: `docs { ${test.fields} }`,
 			});
-			deepCheck(result, test.result);
+			deepCheck(result.docs, test.result);
 		});
 	});
 });
